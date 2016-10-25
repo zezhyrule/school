@@ -1,0 +1,470 @@
+Script started on Tue 11 Oct 2016 12:17:35 AM CDT
+]0;cs241106@cs:~[cs241106@cs ~]$ exitvim p3List.java[5Pcat p3.datvim p3List.javaexit[K[K./p3.sh
+printf \\n\\n\\n
+
+
+
+cat p3.sh
+#!/bin/bash
+set -v
+printf \\n\\n\\n
+cat p3.sh
+printf \\f
+cat -b p3List.java
+cat -b p3.java
+:
+:
+:
+javac p3.java
+java p3
+:
+:
+:
+date
+printf \\f
+cat -b p3List.java
+     1	public class p3List
+     2	{
+     3		private studentNode head;
+
+     4		public p3List()
+     5		{
+     6			// Default constructor: Creates an empty list object.
+     7			// Precondition: None.
+     8			// Postcondition: An empty list exists.
+     9			head = null;
+    10		} // end default constructor
+
+    11		public void addNode(String name, String studentID)
+    12		{
+    13			// Creates a new student node and adds to list based on
+    14			// alphabetical order of the student's last name
+    15			// Precondition: name is a String of form "Last, First" and
+    16			// studentID is a String.
+    17			// Postcondition: A studentNode is inserted into the
+    18			// appropriate location on the list.
+    19			studentNode newNode = new studentNode(name, studentID);
+
+    20			if (this.head == null)   // if the list is empty
+    21			{
+    22				this.head = newNode; // newNode is head of the list
+    23			}
+    24			else // list is not empty
+    25			{
+    26				if (newNode.comesBefore(this.head)) // if newNode preceeds head
+    27				{
+    28					newNode.next = this.head;
+    29					this.head = newNode;
+    30				}
+    31				else // newNode should be placed after first node
+    32				{
+    33					boolean done = false;
+    34					studentNode curr = this.head;
+    35					studentNode prev = curr;
+
+    36					while (curr != null && done == false)
+    37					{
+    38						if (newNode.comesBefore(curr))
+    39						{
+    40							prev.next = newNode; // node is inserted in between
+    41							newNode.next = curr; // two existing nodes
+    42							done = true;
+    43						}
+    44						else
+    45						{
+    46							prev = curr;
+    47							curr = curr.next;
+    48						}
+    49					}
+
+    50					if (done == false) // newNode goes at end of list
+    51					{
+    52						prev.next = newNode;    // prev was last item of list
+    53					}						    // but now newNode is last
+    54				}
+    55			}
+    56		} // end addNode()
+    57		
+    58		public void processStudent(String name, String studentID, String courseID,
+    59									int credits, char grade)
+    60		{
+    61			// Adds the student and their course to the list.
+    62			// Precondition: A list exists.
+    63			// Postcondition: Student is added if they were not
+    64			// previously on the list. Student's course is added.
+    65			if (this.getStudentByID(studentID) == null)
+    66			{
+    67				this.addNode(name, studentID); // if not on the list, add them
+    68			}
+    69			this.getStudentByID(studentID).addCourse(courseID, credits, grade);
+    70		} // end processStudent()
+
+    71		public studentNode getStudentByID(String studentID)
+    72		{
+    73			// Checks if studentID matches one already on the list.
+    74			// Precondition: List exists, studentID is a string.
+    75			// Postcondition: Returns the studentNode with the matching
+    76			// studentID. If no match is found, returns null.
+    77			studentNode curr = this.head;
+    78			while (curr != null) // check if student is already on list
+    79			{
+    80				if (curr.studentID.equals(studentID))
+    81				{
+    82					return curr;
+    83				}
+
+    84				curr = curr.next;
+    85			}
+    86			return curr; // this return statement will always return null
+    87		} // end getStudentByID()
+
+    88		public void displayList()
+    89		{
+    90			// Prints the contents of the list to the console.
+    91			// Precondition: A list exists.
+    92			// Postcondition: The data items of each element of the list
+    93			// are printed to the console formatted nicely.
+    94			studentNode curr = this.head;
+    95			do
+    96			{
+    97				System.out.printf("%1$-20s", curr.name);
+    98				System.out.println(curr.studentID);
+
+    99				courseNode currCourse = curr.courseHead;
+   100				while (currCourse != null)
+   101				{
+   102					System.out.print("       " + currCourse.courseID + "       ");
+   103					System.out.print(currCourse.credits + "    ");
+   104				    System.out.println(currCourse.grade);
+   105					currCourse = currCourse.next;
+   106				}
+   107				System.out.printf("%1$26s", "Total Credits: " + curr.getTotalCredits());
+   108			    System.out.printf("   %1$-18s", "Quality Points: " + curr.getTotalQualityPoints());
+   109			    System.out.printf("   GPA: %1$.3f", curr.getGPA());
+   110				System.out.println();
+   111				System.out.println();
+
+   112				curr = curr.next;
+   113			} while (curr != null);
+   114		} // end displayList()
+
+   115		private class studentNode
+   116		{
+   117			String name;
+   118			String studentID;
+   119			courseNode courseHead;
+   120			studentNode next;
+
+   121			public studentNode(String name, String studentID)
+   122			{
+   123				// Constructor: Creates a studentNode object.
+   124				// Precondition: None.
+   125				// Postcondition: A studentNode object
+   126				// with populated data items is created.
+   127				this.name = name;
+   128				this.studentID = studentID;
+   129				this.courseHead = null;
+   130				this.next = null;
+   131			} // end constructor
+
+   132			public void addCourse(String courseID, int credits, char grade)
+   133			{
+   134				// Creates a new course node and appends to course list.
+   135				// Precondition: studentNode exists, courseID is a String,
+   136				// credits is an integer, and grade is a character.
+   137				// Postcondition: A courseNode is appended to the list.
+   138				courseNode newNode = new courseNode(courseID, credits, grade);
+
+   139				if (this.courseHead == null)    // if the course list is empty
+   140				{
+   141					this.courseHead = newNode;
+   142				}
+   143				else		    			   // the list is not empty
+   144				{
+   145					courseNode curr = this.courseHead;
+
+   146					while (curr.next != null)
+   147					{
+   148						curr = curr.next;
+   149					}
+   150					curr.next = newNode;
+   151				}
+   152			} // end addCourse()
+
+
+   153			public int getTotalCredits()
+   154			{
+   155				// Accumulates credit hours for each course taken
+   156				// by this student and returns the total.
+   157				// Precondition: A studentNode object exists.
+   158				// Postcondition: Returns an integer representing
+   159				// the total number of credit hours taken by the student.
+   160				int totalCredits = 0;
+   161				courseNode curr = this.courseHead;
+
+   162				while (curr != null)
+   163				{
+   164					totalCredits += curr.getCredits();
+   165					curr = curr.next;
+   166				}
+
+   167				return totalCredits;
+   168			} // end getTotalCredits()
+
+   169			public int getTotalQualityPoints()
+   170			{
+   171				// Accumulates quality points for each course
+   172				// taken by this student and gets the total.
+   173				// Precondition: A studentNode object exists.
+   174				// Postcondition: Returns an integer representing
+   175				// the total quality points of this student.
+   176				int totalQualityPoints = 0;
+   177				courseNode curr = this.courseHead;
+
+   178				while (curr != null)
+   179				{
+   180					totalQualityPoints += curr.getQualityPoints();
+   181					curr = curr.next;
+   182				}
+
+   183				return totalQualityPoints;
+   184			} // end getTotalQualityPoints()
+
+   185			public double getGPA()
+   186			{
+   187				// Calculates the GPA of this student.
+   188				// Precondition: studentNode exists
+   189				// Postcondition: Returns calculated GPA.
+   190				return (double)this.getTotalQualityPoints() / this.getTotalCredits();
+   191			} // end getGPA()
+
+   192			public boolean comesBefore(studentNode sNode)
+   193			{
+   194				// Determines alphabetical relationship between
+   195				// the names of two studentNode objects.
+   196				// Precondition: Two studentNode objects with
+   197				// populated data items exist.
+   198				// Postcondition: Returns true if this studentNode's name
+   199				// alphabetically preceeds sNode's name; otherwise returns false.
+   200				if (this.name.compareTo(sNode.name) <= 0)
+   201					return true;
+   202				else
+   203					return false;
+   204			} // end comesBefore()
+
+   205		} // end studentNode class
+
+   206		private class courseNode
+   207		{
+   208			String courseID;
+   209			int credits;
+   210			char grade;
+   211			courseNode next;
+
+   212			public courseNode(String courseID, int credits, char grade)
+   213			{
+   214				// Constructor: Creates a courseNode object.
+   215				// Precondition: None.
+   216				// Postcondition: A courseNode object
+   217				// with populated data items is created.
+   218				this.courseID = courseID;
+   219				this.credits = credits;
+   220				this.grade = grade;
+   221				this.next = null;
+   222			} // end constructor
+
+   223			public int getCredits()
+   224			{
+   225				// Gets the credits of this course.
+   226				// Precondition: A courseNode exists.
+   227				// Postcondition: Returns credits.
+   228				return this.credits;
+   229			} // end getCredits()
+
+   230			public int getQualityPoints()
+   231			{
+   232				// Calculates weighted quality points for this course.
+   233				// Precondition: A course exists with a letter grade
+   234				// A, B, C, D, or F and credits as an integer.
+   235				// Postcondition: Returns quality points of this course.
+   236				int pointValue;
+
+   237				if (this.grade == 'A')     // determine point value for letter grade
+   238					pointValue = 4;
+   239				else if (this.grade == 'B')
+   240					pointValue = 3;
+   241				else if (this.grade == 'C')
+   242					pointValue = 2;
+   243				else if (this.grade == 'D')
+   244					pointValue = 1;
+   245				else
+   246					pointValue = 0;
+
+   247				return pointValue * this.credits;
+   248			} // end getQualityPoints()
+
+   249		} // end courseNode class
+
+   250	} // end p3List class
+cat -b p3.java
+     1	/*
+     2	PROGRAM NAME: Program 3, List Class
+     3	PROGRAMMER:   Charles Davis
+     4	CLASS:        CSC 241.001, Fall 2016
+     5	INSTRUCTOR:   Dr. D. Dunn
+     6	DATE STARTED: October 07, 2016
+     7	DUE DATE:     October 11, 2016
+     8	REFERENCES:   /instr/Sphere.java - used for class template
+     9				  Dr. Dunn's Algorithm Handout - used for list traversal
+
+    10	PROGRAM PURPOSE:
+
+    11	Reads a list of student information from a data file. Puts data
+    12	into linked list and displays the student info to the screen.
+
+    13	VARIABLE DICTIONARY:
+    14		list, p3List - The linked list of studentNodes
+    15		fileLine, String - One line of a file
+    16		studentData, String[] - An array of student's data
+    17		name, String - the student's name
+    18		studentID, String - the student's course ID
+    19		courseID, String - the ID of a course taken by student
+    20		credits, int - the credit hours for a course
+    21		grade, char - the grade a student made in a course
+
+
+    22	ADTs:
+    23		List
+
+    24	FILES USED:
+    25		p3List.java - the java implementation of the List ADT.
+    26		p3.sh - the script used to compile and run the program.
+
+    27	SAMPLE INPUTS:
+
+    28	Shiflet, Angela               1 CSC210 4 A
+    29	Blow, Joe                     5678 CSC121 3 B
+    30	Shiflet, Aaron                444 MTH101 3 B
+    31	Shiflet, Angela               1 CSC202 4 B
+    32	Blow, Joe                     5678 MTH099 3 C
+    33	King, Robert                  3808 MTH111 4 A
+    34	Blow, Joe                     5678 MTH110 4 B
+
+    35	SAMPLE OUTPUTS:
+
+    36	Blow, Joe           5678
+    37	       CSC121       3    B
+    38	       MTH099       3    C
+    39	       MTH110       4    B
+    40	         Total Credits: 10   Quality Points: 27   GPA: 2.700
+
+    41	King, Robert        3808
+    42	       MTH111       4    A
+    43	          Total Credits: 4   Quality Points: 16   GPA: 4.000
+
+    44	Shiflet, Aaron      444
+    45	       MTH101       3    B
+    46	          Total Credits: 3   Quality Points: 9    GPA: 3.000
+
+    47	Shiflet, Angela     1
+    48	       CSC210       4    A
+    49	       CSC202       4    B
+    50	          Total Credits: 8   Quality Points: 28   GPA: 3.500
+
+    51	---------------------------------------------------------------------
+    52	*/
+    53	import java.io.*;
+    54	import java.util.*;
+
+    55	public class p3 extends p3List
+    56	{
+    57		public static void main(String[] args)
+    58		{
+    59			p3List list = new p3List();
+
+    60			try // try block to catch if file isn't found
+    61			{
+    62				File file = new File("../instr/p3.dat");
+    63				Scanner fileStream = new Scanner(file);
+
+    64				String fileLine;
+    65				String[] studentData;
+    66				String name;
+    67				String studentID;
+    68				String courseID;
+    69				int credits;
+    70				char grade;
+
+    71				while (fileStream.hasNextLine())
+    72				{
+    73					// gather all the data from one line and put into variables
+    74					fileLine = fileStream.nextLine();
+    75					name = fileLine.substring(0, 30).trim(); // name is in first 30 chars
+    76					studentData = fileLine.substring(30).split("\\s");
+    77					studentID = studentData[0];
+    78					courseID = studentData[1];
+    79					credits = Integer.parseInt(studentData[2]);
+    80					grade = studentData[3].charAt(0);
+
+    81					list.processStudent(name, studentID, courseID, credits, grade);
+    82				} // end while
+
+    83				fileStream.close();
+    84			} // end try
+    85			catch (FileNotFoundException e)
+    86			{
+    87				System.out.println(e);
+    88			} // end catch
+
+    89			list.displayList();
+    90		} // end main
+    91	} // end p3
+:
+:
+:
+javac p3.java
+java p3
+Blow, Joe           5678
+       CSC121       3    B
+       MTH099       3    C
+       MTH110       4    B
+         Total Credits: 10   Quality Points: 27   GPA: 2.700
+
+King, Robert        3808
+       MTH111       4    A
+          Total Credits: 4   Quality Points: 16   GPA: 4.000
+
+Martin, Robert      890
+       CSC210       4    B
+       HST125       4    D
+          Total Credits: 8   Quality Points: 16   GPA: 2.000
+
+Seeplus, Simon      12345
+       MTH215       4    C
+       HST225       4    A
+       CSC210       4    C
+         Total Credits: 12   Quality Points: 32   GPA: 2.667
+
+Shiflet, Aaron      444
+       MTH101       3    B
+          Total Credits: 3   Quality Points: 9    GPA: 3.000
+
+Shiflet, Angela     1
+       CSC210       4    A
+       CSC202       4    B
+          Total Credits: 8   Quality Points: 28   GPA: 3.500
+
+Sierpinski, Bill    333
+       MTH215       4    B
+       CSC102       4    A
+          Total Credits: 8   Quality Points: 28   GPA: 3.500
+
+:
+:
+:
+date
+Tue Oct 11 00:17:44 CDT 2016
+]0;cs241106@cs:~[cs241106@cs ~]$ exit
+exit
+
+Script done on Tue 11 Oct 2016 12:17:49 AM CDT

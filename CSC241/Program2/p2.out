@@ -1,0 +1,327 @@
+Script started on Tue 27 Sep 2016 10:24:50 AM CDT
+]0;cs241106@cs:~/oldAssignments[cs241106@cs oldAssignments]$ ./p2[K[Kp2.sh
+printf \\n\\n\\n
+
+
+
+cat p2.sh
+#!/bin/bash
+set -v
+printf \\n\\n\\n
+cat p2.sh
+printf \\f
+cat -b p2Date.java
+cat -b p2.java
+:
+:
+:
+javac p2.java
+java p2
+:
+:
+:
+date
+printf \\f
+cat -b p2Date.java
+     1	public class p2Date
+     2	{
+     3		private int month;
+     4		private int day;
+     5		private int year;
+
+     6		public p2Date()
+     7	   	{
+     8			// Default constructor: Creates a date object
+     9			// and initializes it to the default date.
+    10			// Precondition: None.
+    11			// Postcondition: A date of 01/01/2000 exists.
+    12			setMonth(1);
+    13			setDay(1);
+    14			setYear(2000);
+    15		} // end default constructor
+
+    16		public p2Date(int month, int day, int year)
+    17		{
+    18			// Constructor: Creates date with supplied value
+    19			// Precondition: month, day, and year are the desired values
+    20			// Postcondition: A date of month/day/year exists
+    21			setMonth(month);
+    22			setDay(day);
+    23			setYear(year);
+    24		} // end constructor
+    25		
+    26		public void setMonth(int month)
+    27		{
+    28			// Sets the month of a date.
+    29			// Precondition: month is an int greater than 0 and 
+    30			// less than or equal to 12.
+    31			// Postcondition: Month is changed to month.
+    32			if (month > 0 || month <= 12) {
+    33				this.month = month;
+    34			}  // end if
+    35		} // end setMonth
+
+    36		public void setDay(int day)
+    37		{
+    38			// Sets the Day of a date.
+    39			// Precondition: day is an int greater than 0 and less
+    40			// than or equal to the number of days in the month.
+    41			// Postcondition: Day is changed to day.
+    42			int[] daysInMonth = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    43			if (this.year % 4 == 0)  //if it's a leap year
+    44			{
+    45				daysInMonth[2] = 29; //Feb has 29 days
+    46			} // end if
+    47			if (day > 0 || day <= daysInMonth[this.month])
+    48			{
+    49				this.day = day;
+    50			}  // end if
+    51		} // end setDay
+
+    52		public void setYear(int year)
+    53		{
+    54			// Sets the Year of a date.
+    55			// Precondition: year is the desired Year.
+    56			// Postcondition: Year is changed to year.
+    57			this.year = year;
+    58		} // end setYear
+
+    59		public void setDate(String date)
+    60	   	{
+    61			// Sets the Date.
+    62			// Precondition: date is the desired Date in
+    63			// MM/DD/YYYY format.
+    64			// Postcondition: The Date is changed to date.
+    65			setMonth(Integer.parseInt(date.substring(0,2)));
+    66			setDay(Integer.parseInt(date.substring(3,5)));
+    67			setYear(Integer.parseInt(date.substring(6)));
+    68		} // end setDate
+
+    69		public void incrementDay()
+    70		{
+    71			// Increments the day by 1.
+    72			// Precondition: None.
+    73			// Postcondition: The day is incremented by 1. Rolls over to
+    74			// the next month and year if needed.
+    75			int[] daysInMonth = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    76			int tempDay = this.day + 1; // increment current day and store in temp
+    77			if (this.year % 4 == 0)  //if it's a leap year
+    78			{
+    79				daysInMonth[2] = 29; //Feb has 29 days
+    80			} //end if
+    81			if (tempDay > daysInMonth[this.month])
+    82			{
+    83				if ((this.month + 1) < 12)
+    84				{
+    85					setMonth(this.month + 1);
+    86				}
+    87				else
+    88				{
+    89					setMonth(1);
+    90					setYear(this.year + 1);
+    91				} // end if
+    92				setDay(1);
+    93			}
+    94			else
+    95			{
+    96				setDay(tempDay);
+    97			} // end if
+    98			
+
+    99		} // end incrementDay
+
+   100		public void displayDateRegular() 
+   101		{  
+   102			// Displays the date in MM/DD/YYYY format.
+   103			// Precondition: Assumes System.out is available.
+   104			// Postcondition: None.
+   105			String date = String.format("%02d", this.month);
+   106			date += String.format("/%02d", this.day);
+   107			date += String.format("/%04d", this.year);
+   108			System.out.print(date);
+   109		}  // end displayDateRegular
+
+   110		public void displayDateWords()
+   111		{
+   112			// Displays the date in Day, Month dd, yyyy format.
+   113			// Precondition Assumes System.out is available.
+   114			// Postcondition: None.
+   115			int dayOfWeek = 0;
+   116			int firstDayOfMonth = ((int)((this.year - 1901) * 365.25 + 2)) % 7;
+   117			int[] daysInMonth = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+   118			String[] monthArray = {"", "January", "February", "March", "April",
+   119									"May", "June", "July", "August", "September",
+   120									"October", "November", "December"};
+   121			String[] daysArray = {"Sunday", "Monday", "Tuesday", "Wednesday",
+   122								"Thursday", "Friday", "Saturday"};
+   123			if (this.year % 4 == 0)  //if it's a leap year
+   124			{
+   125				daysInMonth[2] = 29; //Feb has 29 days
+   126			} //end if
+   127			for (int i = 0; i < this.month; i++)
+   128			{
+   129				firstDayOfMonth = (firstDayOfMonth + daysInMonth[i]) % 7;
+   130			}
+
+   131			dayOfWeek = (firstDayOfMonth + this.day - 1) % 7;
+
+   132			System.out.print(daysArray[dayOfWeek] + ", " + monthArray[this.month] +
+   133					" " + this.day + ", " + this.year);
+
+   134		}
+   135	} // end p2Date
+cat -b p2.java
+     1	/*
+     2	PROGRAM NAME: Program 2, ADT Implementation and Use
+     3	PROGRAMMER:   Charles Davis
+     4	CLASS:        CSC 241.001, Fall 2016
+     5	INSTRUCTOR:   Dr. D. Dunn
+     6	DATE STARTED: September 24, 2016
+     7	DUE DATE:     September 27, 2016
+     8	REFERENCES:   /instr/Sphere.java - used for class template
+
+     9	PROGRAM PURPOSE:
+
+    10	Stores three date objects which can be displayed
+    11	and manipulated by the user using console input.
+
+    12	VARIABLE DICTIONARY:
+    13		date1, p2Date - The first date object
+    14		date2, p2Date - the second date object
+    15		date3, p2Date - the third date object
+    16		dateArray[], p2Date - an array of the date objects
+    17		command, String - a variable to hold the user input
+    18		dateNumber, int - specifies which date object to use
+
+    19	ADTs:
+    20		p2Date
+
+    21	FILES USED:
+    22		p2Date.java - the java implementation of the Date ADT
+
+    23	SAMPLE INPUTS:
+
+    24	G 2				
+    25	S 1 11/08/1996 
+    26	I 2				
+    27	D 1
+    28	D 2
+
+    29	SAMPLE OUTPUTS:
+
+    30	date 2 is 01/01/2000
+    31	date 1 was 01/01/2000 and is now 11/08/1996
+    32	date 2 is now 01/02/2000
+    33	date 1 is 11/08/1996  date 2 is 01/02/2000  date 3 is 05/30/2016
+    34	date 1 is Friday, November 8, 1996; date 2 is Sunday, January 2, 2000;
+    35	date 3 is Monday, May 30, 2016;
+    36	---------------------------------------------------------------------
+    37	*/
+
+    38	import java.util.*;
+
+    39	public class p2 extends p2Date
+    40	{
+    41		public static void main(String[] args)
+    42		{
+    43			p2Date date1 = new p2Date();
+    44			p2Date date2 = new p2Date();
+    45			p2Date date3 = new p2Date(5, 31, 2016);
+    46			p2Date[] dateArray = new p2Date[4]; // create an array to make
+    47			dateArray[0] = null;                // choosing the object more
+    48			dateArray[1] = date1;				// simple 
+    49			dateArray[2] = date2;
+    50			dateArray[3] = date3;
+    51			Scanner input = new Scanner(System.in);
+    52			String command;
+    53			int dateNumber = 0;
+
+    54			do // main loop
+    55			{
+    56				System.out.print("\nEnter a command: ");
+    57				command = input.nextLine();
+
+    58				if (command.length() > 1) // make sure no exception is thrown
+    59					dateNumber = Character.getNumericValue(command.charAt(2));
+
+
+    60				if (command.charAt(0) == 'G') // Get date
+    61				{
+    62					System.out.print("date " + dateNumber + " is ");
+    63					dateArray[dateNumber].displayDateRegular();
+    64				}
+    65				else if (command.charAt(0) == 'S') // Set date
+    66				{
+    67					String changedDate = command.substring(4);
+    68					
+    69					System.out.print("date " + dateNumber + " was ");
+    70				    dateArray[dateNumber].displayDateRegular();
+    71					dateArray[dateNumber].setDate(changedDate);
+    72					System.out.print(" and is now ");
+    73				   	dateArray[dateNumber].displayDateRegular();
+    74				}
+    75				else if (command.charAt(0) == 'I') // Increment date
+    76				{
+    77					dateArray[dateNumber].incrementDay();
+    78					System.out.print("date " + dateNumber + " is now ");
+    79					dateArray[dateNumber].displayDateRegular();
+    80				}
+    81				else if (command.charAt(0) == 'D') // Display date
+    82				{
+    83					if (dateNumber == 1)
+    84					{
+    85						for (int i = 1; i < 4; i++)
+    86						{
+    87							System.out.print("date " + i + " is ");
+    88							dateArray[i].displayDateRegular();
+    89							System.out.print("  ");
+    90						}
+    91					}
+    92					else if (dateNumber == 2)
+    93					{
+    94						for (int i = 1; i < 4; i++)
+    95						{
+    96							System.out.print("date " + i + " is ");
+    97							dateArray[i].displayDateWords();
+    98							System.out.print("; ");
+    99						}
+   100					}
+   101				}
+   102				else if (command.charAt(0) != 'Q')
+   103				{
+   104					System.out.println("Command not recognized. Type Q to quit.");
+   105				}
+   106				else
+   107					break;
+   108			}while (command != "Q"); // end main loop
+
+   109			System.out.println("Thank you for using my program!");
+   110		} // end main
+   111	}
+:
+:
+:
+javac p2.java
+java p2
+
+Enter a command: G 1
+date 1 is 01/01/2000
+Enter a command: S 2 11/08/1996
+date 2 was 01/01/2000 and is now 11/08/1996
+Enter a command: I 3
+date 3 is now 06/01/2016
+Enter a command: D 1
+date 1 is 01/01/2000  date 2 is 11/08/1996  date 3 is 06/01/2016  
+Enter a command: D 2
+date 1 is Saturday, January 1, 2000; date 2 is Friday, November 8, 1996; date 3 is Wednesday, June 1, 2016; 
+Enter a command: Q
+Thank you for using my program!
+:
+:
+:
+date
+Tue Sep 27 10:25:29 CDT 2016
+]0;cs241106@cs:~/oldAssignments[cs241106@cs oldAssignments]$ exit
+exit
+
+Script done on Tue 27 Sep 2016 10:25:32 AM CDT

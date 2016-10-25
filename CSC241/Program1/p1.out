@@ -1,0 +1,418 @@
+Script started on Tue 13 Sep 2016 11:16:17 AM CDT
+]0;cs241106@cs:~[cs241106@cs ~]$ ./p1.sh
+printf \\n\\n\\n
+
+
+
+cat p1.sh
+#!/bin/bash
+set -v
+printf \\n\\n\\n
+cat p1.sh
+printf \\f
+cat -b p1.java
+:
+:
+:
+javac p1.java
+java p1
+:
+:
+:
+date
+printf \\f
+cat -b p1.java
+     1	/*
+     2	PROGRAM NAME: Program 1, Software Engineering and Modular Design
+     3	PROGRAMMER:   Charles Davis
+     4	CLASS:        CSC 241.001, Fall 2016
+     5	INSTRUCTOR:   Dr. D. Dunn
+     6	DATE STARTED: September 1, 2016
+     7	DUE DATE:     September 13, 2016
+     8	REFERENCES:   
+
+     9	PROGRAM PURPOSE:
+    10	a. This program reads student names and scores from a source file
+    11	b. The program prints each name and averaged score for each student
+    12	   along with a course grade and class average
+
+    13	VARIABLE DICTIONARY:
+    14		NUMBER_OF_POINT_VALUES, int
+    15		NUMBER_OF_ENTRIES, int
+    16		fileData, String[][] - the data from the file in a 2D array
+    17		pointValues, int[] - the max points possible for each score
+    18		students, Student[]
+    19		name, String
+    20		scores, int[] - individual students' scores
+    21		averagedScores, double[]
+    22		overallAverage, double
+    23		courseGrade, char
+
+    24	   
+    25	ADTs:
+    26	   none
+
+    27	FILES USED:
+    28	   p1.dat - a file containing names and scores
+
+    29	SAMPLE INPUTS:
+    30		100 100 100 200 50 50 25 50 50 15 35 22 15 10 20 15 20 30 20 15
+    31		Jack Johnson 85 83 79 182 50 45 20 50 45 15 32 18 13 9 18 15 15 20 18 13
+    32		Lisa Adams 80 90 95 101 40 40 20 50 48 13 32 20 9 5 18 15 18 25 18 13
+
+    33	SAMPLE OUTPUTS:
+    34		Name         Test 1 Test 2 Test 3 Test 4 Lab 1  Lab 2  Lab 3  Lab 4  Lab 5  HW 1   HW 2   HW 3   HW 4   HW 5   HW 6   Quiz 1 Quiz 2 Quiz 3 Quiz 4 Quiz 5
+    35		Jack Johnson 85.00  83.00  79.00  91.00 100.00  90.00  80.00 100.00  90.00 100.00  91.43  81.82  86.67  90.00  90.00 100.00  75.00  66.67  90.00  86.67
+    36		Average: 87.00
+    37		Grade: B
+
+
+    38		Lisa Adams   80.00  90.00  95.00  50.50  80.00  80.00  80.00 100.00  96.00  86.67  91.43  90.91  60.00  50.00  90.00 100.00  90.00  83.33  90.00  86.67
+    39		Average: 83.00
+    40		Grade: B
+
+
+    41		Overall Grade: 71.00
+    42	---------------------------------------------------------------------
+    43	*/
+
+    44	import java.util.*;
+    45	import java.io.*;
+
+    46	public class p1 extends Student
+    47	{
+    48		final static int NUMBER_OF_POINT_VALUES = 20;
+    49		final static int NUMBER_OF_ENTRIES = 4;
+
+    50		public static void main (String[] args)
+    51		{
+    52			String[][] fileData = new String[NUMBER_OF_ENTRIES + 1][NUMBER_OF_POINT_VALUES + 2];
+    53			int[] pointValues = new int[NUMBER_OF_POINT_VALUES];
+    54			Student[] students = new Student[NUMBER_OF_ENTRIES];
+
+    55			fileData = getDataFromFile(fileData);
+    56			pointValues = populatePointValuesArray(fileData, pointValues);
+    57			students = populateStudentArray(fileData, students);
+
+    58			//move this after documentation if time
+    59			for (int i = 0; i < NUMBER_OF_ENTRIES; i++)
+    60			{
+    61				students[i].setAveragedScores(calculateAveragedStudentScores(pointValues,
+    62										      students[i]));
+    63			}
+
+    64			displayScores(students);
+
+    65		} // end main
+
+    66		public static String[][] getDataFromFile(String[][] fileData)
+    67		{
+    68		// -----------------------------------------------------------
+    69		// Takes data and puts into 2D array.
+    70		// Precondition: Requires a 2D array to be passed into the 
+    71		// method with the same rows and columns as are in the data
+    72		// file.
+    73		// Postcondition: Returns a 2D array with the first row
+    74		// being the max possible values for each assignment
+    75		// and the following rows containing student values
+    76		// ----------------------------------------------------------
+    77			Scanner fileStream;
+    78			File file = new File("../instr/p1.dat");
+
+    79			try
+    80			{
+    81				fileStream = new Scanner(file);
+
+    82				while (fileStream.hasNext())
+    83				{
+
+    84					for (int i = 0; i < fileData.length; i++)
+    85					{
+    86						for (int j = 0; j < fileData[i].length; j++)
+    87						{
+    88							if (i == 0 && j == 0)
+    89							{
+    90								j = j + 2; //because first line contains no name
+    91							}
+
+    92							fileData[i][j] = fileStream.next();
+    93						}
+    94					}
+    95				} // end while
+
+    96				fileStream.close();
+
+    97			} // end try
+    98			catch (FileNotFoundException e)
+    99			{
+   100				System.out.println(e);
+   101			} // end catch
+
+   102			return fileData;
+   103		}
+
+   104		public static int[] populatePointValuesArray(String[][] fileData, int[] pointValues)
+   105		{
+   106		// -----------------------------------------------------------
+   107		// Fills pointsValues array with values.
+   108		// Precondition: 2D array fileData is populated with values.
+   109		// This method will take the first row of fileData and
+   110		// convert them into a 1D int array, pointValues.
+   111		// Postcondition: Returns a 1D int array containing the data
+   112		// from the first row of fileData.
+   113		// ----------------------------------------------------------
+   114			for (int i = 0; i < NUMBER_OF_POINT_VALUES; i++)
+   115			{
+   116				pointValues[i] = Integer.parseInt(fileData[0][i+2]); 
+
+   117				//the first two elements in the fileData array are null
+   118				//because there is no student name on this line of data
+   119			}
+
+   120			return pointValues;
+   121		}
+
+   122		public static Student[] populateStudentArray(String[][] fileData, Student[] students)
+   123		{
+   124		// -----------------------------------------------------------
+   125		// Creates student objects and stores in array.
+   126		// Precondition: The 2D fileData array, starting on the 2nd
+   127		// row, contains information for each student.
+   128		// Postcondition: Returns an array of Student objects filled
+   129		// with the values from the fileData array.
+   130		// ----------------------------------------------------------
+   131			Student[] studentArray = students;
+   132			int[][] scoresArray = new int[studentArray.length][NUMBER_OF_POINT_VALUES];
+
+   133			for (int i = 0; i < NUMBER_OF_ENTRIES; i++)
+   134			{
+   135				//adds the student's first and last name, the first two elements in each array
+   136				//skips the first row of the fileData array because it's the max point values
+   137				studentArray[i] = new Student(fileData[i+1][0] + " " + fileData[i+1][1]);
+
+   138				for (int j = 0; j < NUMBER_OF_POINT_VALUES; j++)
+   139				{
+   140					// the scores for each student start on the third element of each array
+   141					scoresArray[i][j] = Integer.parseInt(fileData[i+1][j+2]);
+   142				}
+
+   143				studentArray[i].setScores(scoresArray[i]);
+   144			}
+
+
+   145			return studentArray;
+   146		}
+
+   147		public static double[] calculateAveragedStudentScores(int[] pointValues, Student student)
+   148		{
+   149		// -----------------------------------------------------------
+   150		// Calculates each student score to be displayed out of 100
+   151		// Precondition: This method takes the max point values array
+   152		// and a student object.
+   153		// Postcondition: The student object now contains correctly
+   154		// calculated scores out of 100 for each assignment.
+   155		// ----------------------------------------------------------
+   156			int[] scoresArray = student.getScores();
+   157			double[] averagedScoresArray = new double[scoresArray.length];
+
+   158			for (int i = 0; i < scoresArray.length; i++)
+   159			{
+   160				averagedScoresArray[i] = (double)scoresArray[i];
+   161			}
+
+   162			for (int i = 0; i < averagedScoresArray.length; i++)
+   163			{
+   164				// divide the scores by the max point value to get a value out of 100
+   165				averagedScoresArray[i] = (averagedScoresArray[i] / pointValues[i]) * 100.0;
+   166				// round to two decimal places
+   167				averagedScoresArray[i] = Math.round(averagedScoresArray[i] * 100.0) / 100.0;
+   168			}
+
+   169			return averagedScoresArray;
+
+   170		}
+
+   171		public static void displayScores(Student[] students)
+   172		{
+   173		// -----------------------------------------------------------
+   174		// Displays the formatted scores.
+   175		// Precondition: An array of Student objects.
+   176		// Postcondition: Scores are displayed for each student,
+   177		// along with the calculated course average
+   178		// ----------------------------------------------------------
+   179			String name;
+   180			double studentAverage;
+   181			double classAverage = 0;
+
+   182			System.out.println("Name         Test 1 Test 2 Test 3 Test 4 Lab 1  Lab 2  Lab 3  Lab 4  Lab 5  HW 1   HW 2   HW 3   HW 4   HW 5   HW 6   Quiz 1 Quiz 2 Quiz 3 Quiz 4 Quiz 5");
+
+   183			for (int i = 0; i < NUMBER_OF_ENTRIES; i++)
+   184			{
+   185				name = students[i].getName();	
+   186				studentAverage = students[i].getOverallAverage();
+   187				classAverage += studentAverage;
+
+   188				System.out.print(name);
+
+   189				for (int x = name.length(); x < 12; x++)
+   190				{
+   191					System.out.print(" ");
+   192				}
+
+   193				for (int j = 0; j < NUMBER_OF_POINT_VALUES; j++)
+   194				{
+   195					System.out.printf("%6.2f", students[i].getAveragedScores()[j]);
+   196					System.out.print(" ");
+   197				}
+
+   198				System.out.println();
+   199				System.out.printf("Average: %.2f", studentAverage);
+   200				System.out.println("\nGrade: " + students[i].getCourseGrade());
+   201				System.out.println();
+   202				System.out.println();
+
+   203			}
+
+   204			classAverage = Math.round((classAverage / NUMBER_OF_ENTRIES) * 100) / 100;
+
+   205			System.out.printf("Class average = %.2f", classAverage);
+
+   206		}
+   207		
+   208	}
+
+   209	class Student
+   210	{
+   211		private String name = "";
+   212		private int[] scores;
+   213		private double[] averagedScores;
+   214		private double overallAverage;
+   215		private char courseGrade;
+
+   216		public Student()
+   217		{
+   218			this.name = "";
+   219		}
+
+   220		public Student(String name)
+   221		{
+   222			this.name = name;
+   223		}
+
+   224		public String getName()
+   225		{
+   226			return this.name;
+   227		}
+
+   228		public void setName(String name)
+   229		{
+   230			this.name = name;
+   231		}
+
+   232		public int[] getScores()
+   233		{
+   234			return this.scores;
+   235		}
+
+   236		public void setScores(int[] scores)
+   237		{
+   238			this.scores = scores;
+   239		}
+
+   240		public double[] getAveragedScores()
+   241		{
+   242			return this.averagedScores;
+   243		}
+
+   244		public void setAveragedScores(double[] averagedScores)
+   245		{
+   246			this.averagedScores = averagedScores;
+   247		}
+
+   248		// -----------------------------------------------------------
+   249		// Calculates student's average.
+   250		// Precondition: averagedScores must be populated.
+   251		// Postcondition: Calculates overallAverage rounded to 2
+   252		// decimal places.
+   253		// ----------------------------------------------------------
+   254		public double getOverallAverage()
+   255		{
+   256			double add = 0;
+
+   257			for (int i = 0; i < this.averagedScores.length; i++)
+   258			{
+   259				add += averagedScores[i];
+   260			}
+   261			
+   262			this.overallAverage = Math.round((add / (averagedScores.length)) * 100) / 100;
+
+   263			return this.overallAverage;
+   264		}
+
+   265		// -----------------------------------------------------------
+   266		// Gets the course grade.
+   267		// Precondition: overallAverage is used.
+   268		// Postcondition: Displays appropriate grades from A-F based
+   269		// on student's overallAverage.
+   270		// ----------------------------------------------------------
+   271		public char getCourseGrade()
+   272		{
+   273			if (this.overallAverage >= 90)
+   274			{
+   275				this.courseGrade = 'A';
+   276			}
+   277			else if (this.overallAverage >= 80)
+   278			{
+   279				this.courseGrade = 'B';
+   280			}
+   281			else if (this.overallAverage >= 70)
+   282			{
+   283				this.courseGrade = 'C';
+   284			}
+   285			else if (this.overallAverage >= 60)
+   286			{
+   287				this.courseGrade = 'D';
+   288			}
+   289			else
+   290			{
+   291				this.courseGrade = 'F';
+   292			}
+
+   293			return this.courseGrade;
+   294		}
+   295	}
+:
+:
+:
+javac p1.java
+java p1
+Name         Test 1 Test 2 Test 3 Test 4 Lab 1  Lab 2  Lab 3  Lab 4  Lab 5  HW 1   HW 2   HW 3   HW 4   HW 5   HW 6   Quiz 1 Quiz 2 Quiz 3 Quiz 4 Quiz 5
+Jack Johnson 85.00  83.00  79.00  91.00 100.00  90.00  80.00 100.00  90.00 100.00  91.43  81.82  86.67  90.00  90.00 100.00  75.00  66.67  90.00  86.67 
+Average: 87.00
+Grade: B
+
+
+Lisa Adams   80.00  90.00  95.00  50.50  80.00  80.00  80.00 100.00  96.00  86.67  91.43  90.91  60.00  50.00  90.00 100.00  90.00  83.33  90.00  86.67 
+Average: 83.00
+Grade: B
+
+
+Andy Cooper  78.00  81.00  11.00  45.00  50.00  40.00  40.00  80.00  24.00  33.33  57.14  50.00  53.33  30.00  75.00  80.00  15.00  66.67  50.00  53.33 
+Average: 50.00
+Grade: F
+
+
+Bonny Blair  23.00  45.00  96.00  86.50  20.00  20.00  40.00 100.00 100.00 100.00 100.00  45.45 100.00  80.00  50.00  80.00  75.00  66.67  50.00  46.67 
+Average: 66.00
+Grade: D
+
+
+Class average = 71.00:
+:
+:
+date
+Tue Sep 13 11:16:50 CDT 2016
+]0;cs241106@cs:~[cs241106@cs ~]$ exit
+exit
+
+Script done on Tue 13 Sep 2016 11:17:16 AM CDT

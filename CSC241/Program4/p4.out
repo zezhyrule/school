@@ -1,0 +1,642 @@
+Script started on Sun 23 Oct 2016 05:13:09 PM CDT
+]0;cs241106@cs:~[cs241106@cs ~]$ ./p4.sh
+printf \\n\\n\\n
+
+
+
+cat p4.sh
+#!/bin/bash
+set -v
+printf \\n\\n\\n
+cat p4.sh
+printf \\f
+cat -b p4.java
+cat -b p4StackA.java
+cat -b p4StackP.java
+cat -b p4StackInterface.java
+:
+:
+:
+javac p4.java
+java p4
+:
+:
+:
+date
+printf \\f
+cat -b p4.java
+     1	/*
+     2	PROGRAM NAME: Program 4, Recursion and Stacks
+     3	PROGRAMMER:   Charles Davis
+     4	CLASS:        CSC 241.001, Fall 2016
+     5	INSTRUCTOR:   Dr. D. Dunn
+     6	DATE STARTED: October 23, 2016
+     7	DUE DATE:     October 25, 2016
+     8	REFERENCES:   Data Abstraction & Problem Solving with Java Textbook
+
+     9	PROGRAM PURPOSE:
+
+    10	Reads a list of student information from a data file. Puts data
+    11	into linked list and displays the student info to the screen.
+
+    12	VARIABLE DICTIONARY:
+    13		StackA, p4StackA - Array-based implementation of stack
+    14		StackP, p4StackP - Referenced-based stack
+    15		licensePlate, String - six-character license number for ID of car
+    16		action, char - action code that determines operation
+    17		MAX_CARS, int - the max number of cars that fit in garage
+
+    18	ADTs:
+    19		Stack
+
+    20	FILES USED:
+    21		p4StackInterface.java - Interface for Stack ADT.
+    22		p4StackA.java - array-based implementation of the Stack ADT.
+    23		p4StackP.java - reference-based implementation of the Stack ADT.
+    24		p4.sh - the script used to compile and run the program.
+
+    25	SAMPLE INPUTS:
+
+    26	dAAA111
+    27	aAAA111
+    28	aBBB222
+    29	aCCC333
+    30	aDDD444
+    31	aEEE555
+    32	aFFF666
+    33	v
+    34	aGGG777
+    35	aHHH888
+    36	xAAA999
+    37	aKKK999
+    38	aLLL000
+    39	aMMM111
+    40	dCCC333
+    41	aLLL111
+    42	dCCC333
+    43	aMMM222
+    44	dM99988
+    45	c
+
+
+    46	SAMPLE OUTPUTS:
+
+    47	Car AAA111 was not found in garage.
+    48	Car AAA111 was successfully parked.
+    49	Car BBB222 was successfully parked.
+    50	Car CCC333 was successfully parked.
+    51	Car DDD444 was successfully parked.
+    52	Car EEE555 was successfully parked.
+    53	Car FFF666 was successfully parked.
+
+    54	Cars in garage:
+    55	  FFF666
+    56	  EEE555
+    57	  DDD444
+    58	  CCC333
+    59	  BBB222
+    60	  AAA111
+
+    61	Car GGG777 was successfully parked.
+    62	Car HHH888 was successfully parked.
+    63	Error: Invalid Action Code.
+    64	Car KKK999 was successfully parked.
+    65	Car LLL000 was successfully parked.
+    66	Garage is full: Car MMM111 could not be parked.
+    67	Car CCC333 has departed.
+    68	Car LLL111 was successfully parked.
+    69	Car CCC333 was not found in garage.
+    70	Garage is full: Car MMM222 could not be parked.
+    71	Error: Invalid License Number.
+
+    72	---------------------------------------------------------------------
+    73	*/
+    74	import java.io.*;
+    75	import java.util.*;
+
+    76	public class p4
+    77	{
+    78		public static void main(String[] args)
+    79		{
+    80			System.out.println("\nUSING ARRAY-BASED STACK:\n");
+    81			p4StackA StackA = new p4StackA();
+    82			processDataUsing(StackA);
+
+    83			System.out.println("\nUSING REFERENCE-BASED STACK:\n");
+    84			p4StackP StackP = new p4StackP();
+    85			processDataUsing(StackP);
+    86		} // end main
+
+    87		public static void processDataUsing(p4StackInterface stack)
+    88		{
+    89		// -----------------------------------------------
+    90		// Reads in data file containing action codes and
+    91		// license plate numbers; Calls appropriate 
+    92		// subroutine based on the action code.
+    93		// Precondition: Data file exists at ../instr/p4.dat
+    94		// Postcondition: License plate numbers from data
+    95		// file are processed based on the action codes.
+    96		// -----------------------------------------------
+    97			try // try block to catch if file isn't found
+    98			{
+    99				File file = new File("../instr/p4.dat");
+   100				Scanner fileStream = new Scanner(file);
+
+   101				String fileline;
+   102				String licensePlate;
+   103				char action;
+
+   104				// main loop
+   105				while (fileStream.hasNextLine())
+   106				{
+   107					fileline = fileStream.next();
+   108					action = fileline.charAt(0);
+
+   109					//ARRIVAL
+   110					if (action == 'a')
+   111					{
+   112						licensePlate = fileline.substring(1);
+   113						if (isValidLicense(licensePlate))
+   114						{
+   115							arrival(stack, licensePlate);
+   116						}
+   117						else
+   118						{
+   119							System.out.println("Error: " +
+   120									"Invalid License Number.");
+   121						} // end if
+   122					}
+   123					//DEPARTURE
+   124					else if (action == 'd') // ACTION CODE 'd'
+   125					{
+   126						licensePlate = fileline.substring(1);
+   127						if (isValidLicense(licensePlate))
+   128						{
+   129							departure(stack, licensePlate);
+   130						}
+   131						else
+   132						{
+   133							System.out.println("Error: " +
+   134									"Invalid License Number.");
+   135						} // end if
+   136					}
+   137					//VIEW
+   138					else if (action == 'v') // ACTION CODE 'v'
+   139					{
+   140						System.out.println("\nCars in garage:");
+   141						view(stack);
+   142						System.out.println();
+   143					}
+   144					//CLOSE
+   145					else if (action == 'c') // ACTION CODE 'c'
+   146					{
+   147						break; // end while loop
+   148					}
+   149					else
+   150					{
+   151						System.out.println("Error: Invalid Action Code.");
+   152					} // end if
+   153				} // end while
+
+   154				fileStream.close();
+   155			} // end try
+   156			catch (FileNotFoundException e)
+   157			{
+   158				System.out.println(e);
+   159			} // end catch
+   160		} // end processDataUsing 
+
+   161		public static void arrival(p4StackInterface stack, String licensePlate)
+   162		{
+   163		// -----------------------------------------------
+   164		// Adds car to "garage" stack, provided garage is
+   165		// not full. Displays the license number and
+   166		// whether it was successfully parked or not.
+   167		// Precondition: stack is a Stack to which you
+   168		// want to add a car. licensePlate identifies the car.
+   169		// Postcondition: Car is added to nonfull stack.
+   170		// Message is displayed specifying the license
+   171		// number of the car and whether it was parked.
+   172		// -----------------------------------------------
+   173				final int MAX_CARS = 10;
+
+   174				if (stack.getNumOfItems() < MAX_CARS)
+   175				{
+   176					stack.push(licensePlate);
+   177					System.out.println("Car " + licensePlate +
+   178							" was successfully parked.");
+   179				}
+   180				else
+   181				{
+   182					System.out.println("Garage is full: Car " + licensePlate +
+   183							" could not be parked.");
+   184				} // end if
+   185		} // end arrival
+
+   186		public static void departure(p4StackInterface stack, String licensePlate)
+   187		{
+   188		// -----------------------------------------------
+   189		// Searches for car in garage by licensePlate and
+   190		// removes it if found. Stack is otherwise unchanged.
+   191		// Precondition: None.
+   192		// Postcondition: Car matching licensePlate is 
+   193		// removed from stack. Message printed to screen.
+   194		// -----------------------------------------------
+   195			Object item;
+   196			
+   197			if (stack.isEmpty())
+   198			{
+   199				System.out.println("Car " + licensePlate + " was not found in garage.");
+   200				return; // match not found
+   201			}
+
+   202			item = stack.pop();
+
+   203			if (licensePlate.equals(item)) 
+   204			{
+   205				System.out.println("Car " + licensePlate + " has departed.");
+   206				return;
+   207			}
+
+   208			departure(stack, licensePlate);
+   209			stack.push(item);
+   210		} // end departure
+
+   211		public static void view(p4StackInterface stack)
+   212		{
+   213		// -----------------------------------------------
+   214		// Lists all the cars currently in the garage.
+   215		// Precondition: stack is a Stack to be traversed.
+   216		// Postcondition: The cars in the garage are
+   217		// printed to the screen. stack is unchanged.
+   218		// -----------------------------------------------
+   219			Object item;
+
+   220			if (stack.isEmpty())
+   221			{
+   222				return; // stack is empty; move back up the recursion
+   223			} // end if
+
+   224			item = stack.pop();
+   225			System.out.println("  " + item);
+   226			view(stack);
+   227			stack.push(item);
+   228		} // end view
+
+   229		public static boolean isValidLicense(String licensePlate)
+   230		{
+   231		// -----------------------------------------------
+   232		// Determines whether license is valid.
+   233		// Precondition: licensePlate is a String.
+   234		// Postcondition: Returns true if valid license;
+   235		// otherwise returns false.
+   236		// -----------------------------------------------
+   237			boolean valid = true;
+
+   238			// license plate must be of length six
+   239			if (licensePlate.length() != 6)
+   240			{
+   241				valid = false;
+   242			} // end if
+
+   243			// first three characters must be capital letters
+   244			for (int i = 0; i < 3; i++)
+   245			{
+   246				if (!Character.isLetter(licensePlate.charAt(i)) ||
+   247					!Character.isUpperCase(licensePlate.charAt(i)))
+   248				{
+   249					valid = false;
+   250				} // end if
+   251			} // end for
+
+   252			// next three characters must be numbers
+   253			for (int i = 3; i < 6; i++)
+   254			{
+   255				if (!Character.isDigit(licensePlate.charAt(i)))
+   256				{
+   257					valid = false;
+   258				} // end if
+   259			} // end for
+
+   260			return valid;
+   261		} // end isValidLicense
+   262	} // end p4
+cat -b p4StackA.java
+     1	// Filename: p4StackA.java
+     2	// Purpose: Array-based implementation of stack
+
+     3	public class p4StackA implements p4StackInterface
+     4	{
+     5		final int MAX_STACK = 10; // max size of stack
+     6		private Object items[];
+     7		private int top;
+
+     8		public p4StackA()
+     9		{
+    10		// -----------------------------------------------
+    11		// Default Constructor: Creates empty stack.
+    12		// Precondition: None.
+    13		// Postcondition: An empty stack is created.
+    14		// -----------------------------------------------
+    15			items = new Object[MAX_STACK];
+    16			top = -1;
+    17		} // end default constructor
+
+    18		public boolean isEmpty()
+    19		{
+    20		// -----------------------------------------------
+    21		// Determines whether a stack is empty.
+    22		// Precondition: None.
+    23		// Postcondition: Returns true if stack is empty;
+    24		// otherwise returns false.
+    25		// -----------------------------------------------
+    26			return (top < 0);
+    27		}	// end isEmpty
+
+    28		public boolean isFull()
+    29		{
+    30		// -----------------------------------------------
+    31		// Determines if a stack is full.
+    32		// Precondition: None.
+    33		// Postcondition: Returns true if stack is full.
+    34		// -----------------------------------------------
+    35			return (top == MAX_STACK-1);
+    36		} // end isFull
+
+    37		public void push(Object newItem) throws RuntimeException
+    38		{
+    39		// -----------------------------------------------
+    40		// Adds newItem to top of stack. Throws exception
+    41		// if the insertion is not successful.
+    42		// Precondition: newItem is the item to be added.
+    43		// Postcondition: If insertion is successful,
+    44		// newItem is on the top of the stack.
+    45		// -----------------------------------------------
+    46			if (!isFull()) // if the stack isn't full
+    47			{
+    48				items[++top] = newItem; // increment top and add
+    49			}						    // newItem to that index
+    50			else
+    51			{   // stack is full, throw an exception
+    52				throw new RuntimeException("Exception on push: stack full");
+    53			} // end if
+    54		} // end push
+
+    55		public Object pop() throws RuntimeException
+    56		{
+    57		// -----------------------------------------------
+    58		// Retrieves and removes the top of the stack.
+    59		// Throws exception if deletion is unsuccessful.
+    60		// Precondition: Stack exists.
+    61		// Postcondition: If stack isn't empty, removes
+    62		// top of stack and returns it.
+    63		// -----------------------------------------------
+    64			if (!isEmpty()) // if the stack isn't empty
+    65			{
+    66				return items[top--]; // return the item at top
+    67			}						 // and decrement top
+    68			else
+    69			{	// stack is empty, throw an exception
+    70				throw new RuntimeException("Exception on pop: stack empty");
+    71			} // end if
+    72		} // end pop
+
+    73		public int getNumOfItems()
+    74		{
+    75		// -----------------------------------------------
+    76		// Returns the number of items in the stack.
+    77		// Precondition: None.
+    78		// Postcondition: The number of items is returned.
+    79		// -----------------------------------------------
+    80			return (top+1); // number of items is 1 greater than top index
+    81		} // end getNumOfItems
+    82	} // end p4StackA
+cat -b p4StackP.java
+     1	// Filename: p4StackP.java
+     2	// Purpose: Reference-based implementation of stack
+     3	import java.lang.RuntimeException;
+
+     4	public class p4StackP implements p4StackInterface
+     5	{
+     6		private Node top;
+     7		private int numOfItems;
+
+     8		public p4StackP()
+     9		{
+    10		// -----------------------------------------------
+    11		// Default Constructor: Creates empty stack.
+    12		// Precondition: None.
+    13		// Postcondition: An empty stack is created.
+    14		// -----------------------------------------------
+    15			top = null;
+    16		} // end default constructor
+
+    17		public boolean isEmpty()
+    18		{
+    19		// -----------------------------------------------
+    20		// Determines whether a stack is empty.
+    21		// Precondition: None.
+    22		// Postcondition: Returns true if stack is empty;
+    23		// otherwise returns false.
+    24		// -----------------------------------------------
+    25			return (top == null);
+    26		}	// end isEmpty
+
+    27		public void push(Object newItem)
+    28		{
+    29		// -----------------------------------------------
+    30		// Adds newItem to top of stack.
+    31		// Precondition: newItem is the item to be added.
+    32		// Postcondition: newItem is on top of stack.
+    33		// -----------------------------------------------
+    34			top = new Node(newItem, top);
+    35			numOfItems++;
+    36		} // end push
+
+    37		public Object pop() throws RuntimeException
+    38		{
+    39		// -----------------------------------------------
+    40		// Retrieves and removes the top of the stack.
+    41		// Throws exception if deletion is unsuccessful.
+    42		// Precondition: Stack exists.
+    43		// Postcondition: If stack isn't empty, removes
+    44		// top of stack and returns it.
+    45		// -----------------------------------------------
+    46			if (!isEmpty()) // if the stack isn't empty
+    47			{
+    48				Node temp = top;
+    49				top = top.next;
+    50				numOfItems--;
+    51				return temp.item;
+    52			}
+    53			else
+    54			{	// stack is empty, throw an exception
+    55				throw new RuntimeException("Exception on pop: stack empty");
+    56			} // end if
+    57		} // end pop
+
+    58		public int getNumOfItems()
+    59		{
+    60		// -----------------------------------------------
+    61		// Returns the number of items in the stack.
+    62		// Precondition: None.
+    63		// Postcondition: The number of items is returned.
+    64		// -----------------------------------------------
+    65			return numOfItems;
+    66		} // end getNumOfItems
+
+    67		class Node
+    68		{
+    69			Object item;
+    70			Node next;
+
+    71			Node(Object newItem, Node nextNode)
+    72			{
+    73				item = newItem;
+    74				next = nextNode;
+    75			} // end constructor
+    76		} // end class Node
+    77	} // end p4StackP
+cat -b p4StackInterface.java
+     1	public interface p4StackInterface
+     2	{
+     3		public boolean isEmpty();
+     4		// -----------------------------------------------
+     5		// Determines whether a stack is empty.
+     6		// Precondition: None.
+     7		// Postcondition: Returns true if stack is empty;
+     8		// otherwise returns false.
+     9		// -----------------------------------------------
+
+    10		//public boolean isFull();
+    11		// -----------------------------------------------
+    12		// Determines if a stack is full.
+    13		// Precondition: None.
+    14		// Postcondition: Returns true if stack is full.
+    15		// -----------------------------------------------
+
+    16		public void push(Object newItem) throws RuntimeException;
+    17		// -----------------------------------------------
+    18		// Adds newItem to top of stack. Throws exception
+    19		// if the insertion is not successful.
+    20		// Precondition: newItem is the item to be added.
+    21		// Postcondition: If insertion is successful,
+    22		// newItem is on the top of the stack.
+    23		// -----------------------------------------------
+
+    24		public Object pop() throws RuntimeException;
+    25		// -----------------------------------------------
+    26		// Retrieves and removes the top of the stack.
+    27		// Throws exception if deletion is unsuccessful.
+    28		// Precondition: Stack exists.
+    29		// Postcondition: If stack isn't empty, removes
+    30		// top of stack and returns it.
+    31		// -----------------------------------------------
+
+    32		public int getNumOfItems();
+    33		// -----------------------------------------------
+    34		// Returns the number of items in the stack.
+    35		// Precondition: None.
+    36		// Postcondition: The number of items is returned.
+    37		// -----------------------------------------------
+    38	} // end p4StackInterface
+:
+:
+:
+javac p4.java
+java p4
+
+USING ARRAY-BASED STACK:
+
+Car AAA111 was not found in garage.
+Car AAA111 was successfully parked.
+Car BBB222 was successfully parked.
+Car CCC333 was successfully parked.
+Car DDD444 was successfully parked.
+Car EEE555 was successfully parked.
+Car FFF666 was successfully parked.
+
+Cars in garage:
+  FFF666
+  EEE555
+  DDD444
+  CCC333
+  BBB222
+  AAA111
+
+Car GGG777 was successfully parked.
+Car HHH888 was successfully parked.
+Error: Invalid Action Code.
+Car KKK999 was successfully parked.
+Car LLL000 was successfully parked.
+Garage is full: Car MMM111 could not be parked.
+Car CCC333 has departed.
+Car LLL111 was successfully parked.
+Car CCC333 was not found in garage.
+Garage is full: Car MMM222 could not be parked.
+
+Cars in garage:
+  LLL111
+  LLL000
+  KKK999
+  HHH888
+  GGG777
+  FFF666
+  EEE555
+  DDD444
+  BBB222
+  AAA111
+
+Error: Invalid License Number.
+
+USING REFERENCE-BASED STACK:
+
+Car AAA111 was not found in garage.
+Car AAA111 was successfully parked.
+Car BBB222 was successfully parked.
+Car CCC333 was successfully parked.
+Car DDD444 was successfully parked.
+Car EEE555 was successfully parked.
+Car FFF666 was successfully parked.
+
+Cars in garage:
+  FFF666
+  EEE555
+  DDD444
+  CCC333
+  BBB222
+  AAA111
+
+Car GGG777 was successfully parked.
+Car HHH888 was successfully parked.
+Error: Invalid Action Code.
+Car KKK999 was successfully parked.
+Car LLL000 was successfully parked.
+Garage is full: Car MMM111 could not be parked.
+Car CCC333 has departed.
+Car LLL111 was successfully parked.
+Car CCC333 was not found in garage.
+Garage is full: Car MMM222 could not be parked.
+
+Cars in garage:
+  LLL111
+  LLL000
+  KKK999
+  HHH888
+  GGG777
+  FFF666
+  EEE555
+  DDD444
+  BBB222
+  AAA111
+
+Error: Invalid License Number.
+:
+:
+:
+date
+Sun Oct 23 17:13:14 CDT 2016
+]0;cs241106@cs:~[cs241106@cs ~]$ exit
+exit
+
+Script done on Sun 23 Oct 2016 05:13:17 PM CDT
