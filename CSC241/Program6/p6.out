@@ -1,0 +1,711 @@
+Script started on Tue 22 Nov 2016 01:11:57 AM CST
+]0;cs241106@cs:~[cs241106@cs ~]$ ./p6.sh
+printf \\n\\n\\n
+
+
+
+cat p6.sh
+#!/bin/bash
+set -v
+printf \\n\\n\\n
+cat p6.sh
+printf \\f
+cat -b p6.java
+cat -b p6StackP.java
+cat -b p6BinaryTree.java
+:
+:
+:
+javac p6.java
+java p6
+:
+:
+:
+date
+printf \\f
+cat -b p6.java
+     1	/*
+     2	PROGRAM NAME: Program 6, Trees
+     3	PROGRAMMER:   Charles Davis
+     4	CLASS:        CSC 241.001, Fall 2016
+     5	INSTRUCTOR:   Dr. D. Dunn
+     6	DATE STARTED: November 20, 2016
+     7	DUE DATE:     November 22, 2016
+     8	REFERENCES:   Data Abstraction & Problem Solving with Java Textbook (tree implementation)
+
+     9	PROGRAM PURPOSE:
+
+
+    10	VARIABLE DICTIONARY:
+    11		stack, p6StackP - Reference-based stack with generic type
+    12		variableArray, char[] - array used for holding operands
+    13		valueArray, int[] - array with values corresponding to operands at same index
+    14		temp, char - the current character in the string
+    15		postfix, String - a valid postfix expression
+    16		infix, String - a valid infix expression
+    17		result, double - the evaluated expression
+
+    18	ADTs:
+    19		Stack
+    20		Binary Tree
+
+    21	FILES USED:
+    22		p6.java
+    23		p6StackP.java
+    24		p6BinaryTree.java
+    25		p6.sh
+
+    26	SAMPLE INPUTS:
+
+    27	P*B
+    28	(((P*4)/(A-S))/((2+6)-(3*2)))
+    29	(W)
+
+    30	SAMPLE OUTPUTS:
+
+    31	Infix: P*B
+    32	Postfix: PB*
+    33	Prefix: *PB
+    34	Result: 160
+
+    35	Infix: (((P*4)/(A-S))/((2+6)-(3*2)))
+    36	Postfix: P4*AS-/26+32*-/
+    37	Prefix: //*P4-AS-+26*32
+    38	Result: -21.333
+
+    39	Infix: (W)
+    40	Postfix: W
+    41	Prefix: W
+    42	Result: 10
+
+
+    43	---------------------------------------------------------------------
+    44	*/
+    45	import java.io.*;
+    46	import java.util.*;
+
+    47	public class p6
+    48	{
+    49		public static void main(String[] args)
+    50		{
+    51			try // try block to catch if file isn't found
+    52			{
+    53				File fileA = new File("../instr/p6a.dat"); // file containing infixes
+    54				Scanner fileStreamA = new Scanner(fileA);
+
+    55				File fileB = new File("../instr/p6b.dat"); // file defining operands
+    56				Scanner fileStreamB = new Scanner(fileB);
+
+    57				// Load arrays with operand values
+    58				char[] variableArray = new char[20];
+    59				int[] valueArray = new int[20];
+    60				int i = 0;
+
+    61				while (fileStreamB.hasNext())
+    62				{
+    63					variableArray[i] = fileStreamB.next().charAt(0);
+    64					valueArray[i] = fileStreamB.nextInt();
+    65					i++;
+    66				} // end while
+
+    67				fileStreamB.close(); // done with fileB
+
+    68				p6BinaryTree<Character> arithmeticTree;
+    69				String infixExpression, postfixExpression;
+    70				double result = 0;
+
+    71				// main loop
+    72				while (fileStreamA.hasNextLine())
+    73				{
+    74					// each line of data file is infix expression
+    75					infixExpression = fileStreamA.nextLine();
+
+    76					postfixExpression = infixToPostfix(infixExpression);
+
+    77					result = evaluatePostfix(postfixExpression, variableArray, valueArray);
+
+    78					arithmeticTree = makeBinaryTree(postfixExpression);
+
+    79					System.out.println("Infix: " + infixExpression);
+    80					System.out.println("Postfix: " + postfixExpression);
+    81					System.out.print("Prefix: ");
+    82				  	printPrefix(arithmeticTree); // recursive printing method
+    83					System.out.println();
+    84					// make result prettier
+    85					if (result == (long)result) 
+    86						System.out.printf("Result: %d", (long)result);
+    87					else
+    88						System.out.printf("Result: %.3f", result);
+    89					System.out.println("\n");
+    90				} // end while
+
+    91				fileStreamA.close();
+    92			} // end try
+    93			catch (FileNotFoundException e)
+    94			{
+    95				System.out.println(e);
+    96			} // end catch
+    97		} // end main
+
+    98		public static String infixToPostfix(String infix)
+    99		{
+   100		// -----------------------------------------------
+   101		// Converts the infix string into a postfix string.
+   102		// Precondition: infix is an infix expression.
+   103		// Postcondition: A valid postfix string is returned.
+   104		// -----------------------------------------------
+   105			p6StackP<Character> stack = new p6StackP<>();
+   106			StringBuilder postfix = new StringBuilder();
+   107			char temp;
+
+   108			for (int i = 0; i < infix.length(); i++)
+   109			{
+   110				temp = infix.charAt(i);
+
+   111				if (Character.isLetter(temp) || Character.isDigit(temp))
+   112				{
+   113					postfix.append(temp); // append operand to postfix string
+   114				}
+   115				else if (temp == '+' || temp == '-')
+   116				{
+   117					while (!stack.isEmpty() && stack.peek() != '(')
+   118					{
+   119						postfix.append(stack.pop());
+   120					}
+   121					stack.push(temp);
+   122				}
+   123				else if (temp == '*' || temp == '/')
+   124				{
+   125					while (!stack.isEmpty() && stack.peek() != '(' &&
+   126						   	stack.peek() != '+' && stack.peek() != '-')
+   127					{
+   128						postfix.append(stack.pop());
+   129					}
+   130					stack.push(temp);
+   131				}
+   132				else if (temp == '^')
+   133				{
+   134					stack.push(temp);
+   135				}
+   136				else if (temp == '(')
+   137				{
+   138					stack.push(temp);
+   139				}
+   140				else if (temp == ')')
+   141				{
+   142					while (stack.peek() != '(')
+   143					{
+   144						postfix.append(stack.pop()); // pop and append everything up to left paren
+   145					}
+   146					stack.pop(); // remove matching left paren from stack
+   147				} // end if
+   148			} // end for
+
+   149			while (!stack.isEmpty())
+   150			{
+   151				if (stack.peek() != '(')
+   152					postfix.append(stack.pop());
+   153			} // end while
+
+   154			return postfix.toString();
+   155		} // end infixToPostfix
+
+   156		public static double evaluatePostfix(String postfix, char[] variableArray, int[] valueArray)
+   157		{
+   158		// -----------------------------------------------
+   159		// Evaluates the postfix expression.
+   160		// Precondition: postfix is a valid postfix expression.
+   161		// The arrays contain operand values at correponding indexes.
+   162		// Postcondition: The evaluated total is returned.
+   163		// -----------------------------------------------
+   164			p6StackP<Double> stack = new p6StackP<>();
+   165			char temp;
+   166			double leftOperand, rightOperand;
+
+   167			for (int i = 0; i < postfix.length(); i++)
+   168			{
+   169				temp = postfix.charAt(i);
+
+   170				if (Character.isDigit(temp)) // push numbers onto stack
+   171				{
+   172					stack.push((double)Character.getNumericValue(temp));
+   173				}
+   174				else if (Character.isLetter(temp)) // convert letters to number and push to stack
+   175				{
+   176					int count = 0;
+   177					while (temp != variableArray[count] || count >= variableArray.length)
+   178					{
+   179						count++; //find the corresponding index to the operand value
+   180					}
+   181					stack.push((double)valueArray[count]);
+   182				}
+   183				else
+   184				{
+   185					rightOperand = stack.pop();
+   186					leftOperand = stack.pop();
+
+   187					if (temp == '+')
+   188					{
+   189						stack.push(leftOperand + rightOperand);
+   190					}
+   191					else if (temp == '-')
+   192					{
+   193						stack.push(leftOperand - rightOperand);
+   194					}
+   195					else if (temp == '/')
+   196					{
+   197						stack.push(leftOperand / rightOperand);
+   198					}
+   199					else if (temp == '*')
+   200					{
+   201						stack.push(leftOperand * rightOperand);
+   202					}
+   203					else if (temp == '^')
+   204					{
+   205						stack.push(Math.pow(leftOperand, rightOperand));
+   206					} // end if
+   207				} // end if
+   208			} // end for
+
+   209			return stack.pop();
+
+   210		} // end evaluatePostfix
+
+   211		public static p6BinaryTree<Character> makeBinaryTree(String postfix)
+   212		{
+   213		// -----------------------------------------------
+   214		// Turns a postfix expression into an arithmetic tree.
+   215		// Precondition: postfix is a valid postfix expression.
+   216		// Postcondition: An expression tree is returned.
+   217		// -----------------------------------------------
+   218			p6StackP<p6BinaryTree<Character>> stack = new p6StackP<>();
+   219			char temp;
+   220			p6BinaryTree<Character> leftTree;
+   221			p6BinaryTree<Character> rightTree;
+
+   222			for (int i = 0; i < postfix.length(); i++)
+   223			{
+   224				temp = postfix.charAt(i);
+
+   225				if (Character.isDigit(temp) || Character.isLetter(temp)) // temp is operand
+   226				{
+   227					// create tree and push onto stack
+   228					stack.push(new p6BinaryTree<Character>(temp));
+   229				}
+   230				else // temp is operator
+   231				{
+   232					rightTree = stack.pop();
+   233					leftTree = stack.pop();
+   234					stack.push(new p6BinaryTree<Character>(temp, leftTree, rightTree));
+   235				}
+   236			} // end for
+
+   237			return stack.pop();
+
+   238		} // end makeBinaryTree
+
+   239		public static void printPrefix(p6BinaryTree<Character> binTree)
+   240		{
+   241		// -----------------------------------------------
+   242		// Takes an expression tree and prints a prefix.
+   243		// Precondition: binTree is a valid expression tree.
+   244		// Postcondition: A prefix expression is printed.
+   245		// -----------------------------------------------
+   246			p6BinaryTree<Character> leftTree;
+   247			p6BinaryTree<Character> rightTree;
+
+   248			if (!binTree.isEmpty())
+   249			{
+   250				try 
+   251				{
+   252					System.out.print(binTree.getRootItem());
+   253					leftTree = binTree.detachLeftSubtree();
+   254					if (!leftTree.isEmpty())
+   255						printPrefix(leftTree);
+   256					rightTree = binTree.detachRightSubtree();
+   257					if (!rightTree.isEmpty())
+   258						printPrefix(rightTree);
+   259				}
+   260				catch (Exception e)
+   261				{
+   262					System.out.println(e);
+   263				}
+   264			} // end if
+   265		} // end printPrefix
+
+   266	} // end p6
+cat -b p6StackP.java
+     1	// Filename: p6StackP.java
+     2	// Purpose: Reference-based implementation of stack
+     3	import java.lang.RuntimeException;
+
+     4	public class p6StackP<T>
+     5	{
+     6		private Node<T> top;
+     7		private int numOfItems;
+
+     8		public p6StackP()
+     9		{
+    10		// -----------------------------------------------
+    11		// Default Constructor: Creates empty stack.
+    12		// Precondition: None.
+    13		// Postcondition: An empty stack is created.
+    14		// -----------------------------------------------
+    15			top = null;
+    16		} // end default constructor
+
+    17		public boolean isEmpty()
+    18		{
+    19		// -----------------------------------------------
+    20		// Determines whether a stack is empty.
+    21		// Precondition: None.
+    22		// Postcondition: Returns true if stack is empty;
+    23		// otherwise returns false.
+    24		// -----------------------------------------------
+    25			return (top == null);
+    26		}	// end isEmpty
+
+    27		public void push(T newItem)
+    28		{
+    29		// -----------------------------------------------
+    30		// Adds newItem to top of stack.
+    31		// Precondition: newItem is the item to be added.
+    32		// Postcondition: newItem is on top of stack.
+    33		// -----------------------------------------------
+    34			top = new Node<T>(newItem, top);
+    35			numOfItems++;
+    36		} // end push
+
+    37		public T pop() throws RuntimeException
+    38		{
+    39		// -----------------------------------------------
+    40		// Retrieves and removes the top of the stack.
+    41		// Throws exception if deletion is unsuccessful.
+    42		// Precondition: Stack exists.
+    43		// Postcondition: If stack isn't empty, removes
+    44		// top of stack and returns it.
+    45		// -----------------------------------------------
+    46			if (!isEmpty()) // if the stack isn't empty
+    47			{
+    48				Node<T> temp = top;
+    49				top = top.next;
+    50				numOfItems--;
+    51				return temp.item;
+    52			}
+    53			else
+    54			{	// stack is empty, throw an exception
+    55				throw new RuntimeException("Exception on pop: stack empty");
+    56			} // end if
+    57		} // end pop
+
+    58		public T peek() throws RuntimeException
+    59		{
+    60		// -----------------------------------------------
+    61		// Retrieves the top of the stack.
+    62		// Precondition: Stack exists.
+    63		// Postcondition: Top is returned. Stack is unchanged.
+    64		// -----------------------------------------------
+    65			if (!isEmpty())
+    66			{
+    67				return top.item;
+    68			}
+    69			else
+    70			{
+    71				throw new RuntimeException("Exception on peek: stack empty");
+    72			} // end if
+    73		} // end peek
+
+    74		public int getNumOfItems()
+    75		{
+    76		// -----------------------------------------------
+    77		// Returns the number of items in the stack.
+    78		// Precondition: None.
+    79		// Postcondition: The number of items is returned.
+    80		// -----------------------------------------------
+    81			return numOfItems;
+    82		} // end getNumOfItems
+
+    83		class Node<T>
+    84		{
+    85			T item;
+    86			Node<T> next;
+
+    87			Node(T newItem, Node<T> nextNode)
+    88			{
+    89				item = newItem;
+    90				next = nextNode;
+    91			} // end constructor
+    92		} // end class Node
+    93	} // end p6StackP
+cat -b p6BinaryTree.java
+     1	// Filename: p6BinaryTree.java
+     2	// Purpose: Reference-based implementation of binary tree
+     3	public class p6BinaryTree<T>
+     4	{
+     5		private TreeNode<T> root;
+
+     6		public p6BinaryTree()
+     7		{
+     8			this.root = null;
+     9		} // end default constructor
+
+    10		public p6BinaryTree(T rootItem)
+    11		{
+    12			this.root = new TreeNode<T>(rootItem);
+    13		} // end constructor
+
+    14		public p6BinaryTree(T rootItem, p6BinaryTree<T> leftTree, p6BinaryTree<T> rightTree)
+    15		{
+    16			this.root = new TreeNode<T>(rootItem);
+    17			attachLeftSubtree(leftTree);
+    18			attachRightSubtree(rightTree);
+    19		} // end constructor
+
+    20		public p6BinaryTree(TreeNode<T> rootNode)
+    21		{
+    22			root = rootNode;
+    23		} // end constructor
+
+    24		public boolean isEmpty()
+    25		{
+    26		// -----------------------------------------------
+    27		// Determines if tree is empty.
+    28		// Precondition: None.
+    29		// Postcondition: Returns true if tree is empty;
+    30		// false if it's not empty.
+    31		// -----------------------------------------------
+    32			return (this.root == null);
+    33		} // end isEmpty
+
+    34		public void setRootItem(T newItem)
+    35		{
+    36		// -----------------------------------------------
+    37		// Sets the item in the root of the tree.
+    38		// Precondition: Tree exists, newItem is item to be
+    39		// set at root.
+    40		// Postcondition: newItem is set as root item.
+    41		// -----------------------------------------------
+    42			this.root.item = newItem;
+    43		} // end setRootItem
+
+    44		public T getRootItem()
+    45		{
+    46		// -----------------------------------------------
+    47		// Returns the item in the tree's root.
+    48		// Precondition: The tree isn't empty.
+    49		// Postcondition: Returns the item in the root.
+    50		// -----------------------------------------------
+    51			return this.root.item;
+    52		} // end getRootItem
+
+    53		public void attachLeft(T newItem)
+    54		{
+    55		// -----------------------------------------------
+    56		// Attaches an item as the left child of the root.
+    57		// Precondition: Tree isn't empty and no left child.
+    58		// Postcondition: newItem is leftChild of root.
+    59		// -----------------------------------------------
+    60			if (!isEmpty() && root.leftChild == null)
+    61				root.leftChild = new TreeNode<T>(newItem);
+    62		} // end attachLeft
+
+    63		public void attachRight(T newItem)
+    64		{
+    65		// -----------------------------------------------
+    66		// Attaches an item as the right child of the root.
+    67		// Precondition: Tree isn't empty and no right child.
+    68		// Postcondition: newItem is rightChild of root.
+    69		// -----------------------------------------------
+    70			if (!isEmpty() && root.rightChild == null)
+    71				root.rightChild = new TreeNode<T>(newItem);
+    72		} // end attachRight
+
+    73		public void attachLeftSubtree(p6BinaryTree<T> leftTree)
+    74		{
+    75		// -----------------------------------------------
+    76		// Attaches a tree onto the left of the root.
+    77		// Precondition: Tree isn't empty and no left child.
+    78		// Postcondition: leftTree is attached to root.
+    79		// -----------------------------------------------
+    80			if (!isEmpty() && root.leftChild == null)
+    81			{
+    82				this.root.leftChild = leftTree.root;
+    83				leftTree.root = null; // ensure only one way to enter tree
+    84			} // end if
+    85		} // end attachLeftSubtree
+
+    86		public void attachRightSubtree(p6BinaryTree<T> rightTree)
+    87		{
+    88		// -----------------------------------------------
+    89		// Attaches a tree onto the right of the root.
+    90		// Precondition: Tree isn't empty and no right child.
+    91		// Postcondition: rightTree is attached to root.
+    92		// -----------------------------------------------
+    93			if (!isEmpty() && root.rightChild == null)
+    94			{
+    95				this.root.rightChild = rightTree.root;
+    96				rightTree.root = null; // ensure only one way to enter tree
+    97			} // end if
+    98		} // end attachRightSubtree
+
+    99		public p6BinaryTree<T> detachLeftSubtree() throws Exception
+   100		{
+   101		// -----------------------------------------------
+   102		// Remove the left subtree and return it.
+   103		// Precondition: Tree isn't empty and has left child.
+   104		// Postcondition: leftTree is removed and returned.
+   105		// -----------------------------------------------
+   106			if (isEmpty())
+   107			{
+   108				throw new RuntimeException("Exception: empty tree");
+   109			}
+   110			else
+   111			{
+   112				p6BinaryTree<T> leftTree;
+   113				leftTree = new p6BinaryTree<T>(root.leftChild);
+   114				root.leftChild = null;
+   115				return leftTree;
+   116			} // end if
+   117		} // end detachLeftSubtree
+
+   118		public p6BinaryTree<T> detachRightSubtree()
+   119		{
+   120		// -----------------------------------------------
+   121		// Remove the right subtree and return it.
+   122		// Precondition: Tree isn't empty and has right child.
+   123		// Postcondition: rightTree is removed and returned.
+   124		// -----------------------------------------------
+   125			if (isEmpty())
+   126			{
+   127				throw new RuntimeException("Exception: empty tree");
+   128			}
+   129			else
+   130			{
+   131				p6BinaryTree<T> rightTree;
+   132				rightTree = new p6BinaryTree<T>(root.rightChild);
+   133				root.rightChild = null;
+   134				return rightTree;
+   135			} // end if
+   136		} // end detachRightSubtree
+
+   137		class TreeNode<T>
+   138		{
+   139			T item;
+   140			TreeNode<T> leftChild;
+   141			TreeNode<T> rightChild;
+
+   142			public TreeNode(T newItem)
+   143			{
+   144				this.item = newItem;
+   145				this.leftChild = null;
+   146				this.rightChild = null;
+   147			} // end constructor
+
+   148			public TreeNode(T newItem, TreeNode<T> left, TreeNode<T> right)
+   149			{
+   150				this.item = newItem;
+   151				this.leftChild = left;
+   152				this.rightChild = right;
+   153			} // end constructor
+   154		} // end TreeNode
+
+   155	} // end p6BinaryTree
+:
+:
+:
+javac p6.java
+java p6
+Infix: S-1
+Postfix: S1-
+Prefix: -S1
+Result: 12
+
+Infix: C*S+S*0
+Postfix: CS*S0*+
+Prefix: +*CS*S0
+Result: 260
+
+Infix: ((((5-S)*2)-C)/3)
+Postfix: 5S-2*C-3/
+Prefix: /-*-5S2C3
+Result: -12
+
+Infix: 3
+Postfix: 3
+Prefix: 3
+Result: 3
+
+Infix: ((((E-Q))))
+Postfix: EQ-
+Prefix: -EQ
+Result: 1
+
+Infix: Y+0*Y*Y
+Postfix: Y0Y*Y*+
+Prefix: +Y**0YY
+Result: 18
+
+Infix: R-1
+Postfix: R1-
+Prefix: -R1
+Result: 1
+
+Infix: (Y/(5+(B-(2*4))))
+Postfix: Y5B24*-+/
+Prefix: /Y+5-B*24
+Result: 9
+
+Infix: 6-2+4/C-1*R-4
+Postfix: 62-4C/+1R*-4-
+Prefix: --+-62/4C*1R4
+Result: -1.800
+
+Infix: P*B
+Postfix: PB*
+Prefix: *PB
+Result: 160
+
+Infix: (((P*4)/(A-S))/((2+6)-(3*2)))
+Postfix: P4*AS-/26+32*-/
+Prefix: //*P4-AS-+26*32
+Result: -21.333
+
+Infix: (W)
+Postfix: W
+Prefix: W
+Result: 10
+
+Infix: (((A-B)*((C+Q)/R))+E*1)
+Postfix: AB-CQ+R/*E1*+
+Prefix: +*-AB/+CQR*E1
+Result: 79
+
+Infix: ((((A+B)*C)-Y)/R)
+Postfix: AB+C*Y-R/
+Prefix: /-*+ABCYR
+Result: 141
+
+Infix: (6/3+(C-(C*1)))
+Postfix: 63/CC1*-+
+Prefix: +/63-C*C1
+Result: 2
+
+Infix: (6/3+(C-(C*R))^2)
+Postfix: 63/CCR*-2^+
+Prefix: +/63^-C*CR2
+Result: 402
+
+Infix: R^D^2
+Postfix: RD2^^
+Prefix: ^R^D2
+Result: 512
+
+:
+:
+:
+date
+Tue Nov 22 01:12:04 CST 2016
+]0;cs241106@cs:~[cs241106@cs ~]$ exit
+exit
+
+Script done on Tue 22 Nov 2016 01:12:06 AM CST
