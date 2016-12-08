@@ -135,6 +135,8 @@ public class p7
 	// from graph is returned.
 	// ---------------------------------------------------
 
+		// rewrite using priority queue
+
 		int numOfNodes = graph.getNumVertices();
 		p7Graph MST = new p7Graph(numOfNodes);
 		Vector<Integer> visitedNodes = new Vector<Integer>();
