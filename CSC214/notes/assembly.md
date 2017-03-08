@@ -34,21 +34,24 @@ LDWr is the load word mnemonic. A is the register we use (accumulator).
 Assembly language is line-oriented. Each instruction must be on one line.
 Comments are denoted with a semicolon.
 
-*Pseudo-Operations:* Statements with no corresponding machine
+_Pseudo-Operations:_ Statements with no corresponding machine
 instruction. Used to tell the assembler to perform a certain task. 
 
 The *.ASCII* pseudo-op places strings of ascii characters into memory.
 
 The *.END* pseudo-op tells the assembler when the program ends.
 
-*Trap Operations:* Fault operations, unimplemented codes. Cannot be used
+_Trap Operations:_ Fault operations, unimplemented codes. Cannot be used
 directly in machine language but useful for assembly. We can set aside
 certain bytes for assembly-level instructions. (NOP, no-operation trap;
 STRO, string output trap, etc.).
 
-##Hi Program is assembly
+##Hi Program in Assembly
 
 `
+
+(gnome-ssh-askpass:12436): Gtk-WARNING **: cannot open display:  
+error: unable to read askpass response from '/usr/libexec/openssh/gnome-ssh-askpass'
 ;A program to output "Hi"
 ;
 LDBA		0x000D, d	;Load byte accumulator 'H'
@@ -64,6 +67,7 @@ STOP					;Stop
 .ASCII		"Hi"		;ASCII "Hi" characters
 
 .END
+
 `
 
 Assembler output:
