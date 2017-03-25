@@ -1,36 +1,31 @@
-// HEADER
+// PEP/9 SIMULATOR
+// Charles Davis
 //
 // Resources: www.sanfoundry.com
+//			  computersystemsbook.com
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 
-// PEP/9 SIMULATOR DOWNLOAD
-//
-// things to note: char array is a string
-//				   already have program to convert binary to decimal
-//				   pep/9 simulator should give same result
-
-// function declarations
+// Function Declarations
 int incrementBinary(char* binary, int n);
 int add(char* memory, char* reg, char* address, char* statusRegister);
 int subtract(char* memory, char* reg, char* address, char* statusRegister);
 int loadWord(char* memory, char* reg, char* address, char* statusRegister);
 int storeWord(char* memory, char* reg, char* address, char* statusRegister);
+int arithmeticShift(char direction, char* reg, char* statusRegister);
 int getSizeOfMemory(FILE *fp);
-char* getInstruction(char* memory, char* programCounter);
 long long toBin(long long decimalNum);
-int toDec(char* binaryNum);
+int getLocation(char* binaryNum);
 int power(int base, int exponent);
 int addBinaryNumbers(char* num1, char* num2, char* result, char* statusRegister);
 
 int main(char argc, char** argv)
 {
-	printf("\nBEGIN PROGRAM\n\n");
-	
-	// file i/o
+	// File i/o
 	FILE *filePointer;
 	char *filename = argv[1];
 
@@ -39,18 +34,13 @@ int main(char argc, char** argv)
 	int memorySize = getSizeOfMemory(filePointer);
 	int numOfBytes = memorySize / 8;
 
-	//TEST print to see if bits are accurate
-	printf("numberOfBits: %d\n\n", memorySize);
-	printf("numberOfBytes: %d\n\n", numOfBytes);
-	//end TEST
-
-	//allocate memory
+	// Allocate memory
 	char *memory = malloc(memorySize * sizeof(char) + (numOfBytes * 3));
 
-	// Move fp to start
+	// Move file pointer back to start
 	fseek(filePointer, 0, SEEK_SET);
 
-	// load memory
+	// Load memory into array
 	int c;
 	int i = 0;
 
@@ -67,29 +57,30 @@ int main(char argc, char** argv)
 	fclose(filePointer);
 
 	/////////////////////////////////////////////////
-	// data structures initialized to all 0s
-	char programCounter[20] = "0000000000000000";
-	char statusRegister[8] = "0000";
-	char accumulator[20] = "0000000000000000";
-	char indexRegister[20] = "0000000000000000";
-	char instructionSpecifier[12] = "00000000";
-	char instructionRegister[28] = "000000000000000000000000";
-	char stackPointer[20] = "0000000000000000";
-	char word[20] = "0000000000000000";
-	char address[20] = "0000000000000000";
+	// Initialize data structures
+	char programCounter[17] = "0000000000000000";
+	char statusRegister[5] = "0000";
+	char accumulator[17] = "0000000000000000";
+	char indexRegister[17] = "0000000000000000";
+	char instructionSpecifier[9] = "00000000";
+	char instructionRegister[25] = "000000000000000000000000";
+	char stackPointer[17] = "0000000000000000";
+	char word[17] = "0000000000000000";
+	char address[17] = "0000000000000000";
 
-	// register (0 is Accumulator, 1 is Index)
+	// Register (0 is Accumulator, 1 is Index)
 	char r;
-	// addressing mode (001 is direct addressing)
+	// Addressing mode (001 is direct addressing)
 	char aaa[4];
 
 	//////////////////////////////////////////////////
-	// start cycle
+	// Start cycle
 	int loop = 1;
 	do
 	{
+		/////////////////////////////////////////////
 		// Load instruction into instruction register
-		strncpy(instructionRegister, &memory[toDec(programCounter)], 24);
+		strncpy(instructionRegister, &memory[getLocation(programCounter)], 24);
 		instructionRegister[24] = '\0';
 
 		// Grab 8bit Instruction Specifier
@@ -99,7 +90,7 @@ int main(char argc, char** argv)
 		// Increment Program Counter by 1
 		incrementBinary(programCounter, 1);
 
-		/////////////////////////////////
+		/////////////////////////////////////////////
 		// Decode Instruction Specifier
 		
 		// Separate instruction specifier into nibbles
@@ -129,14 +120,28 @@ int main(char argc, char** argv)
 				secondNibble[2] == '1')
 			{
 				// Perform Arithmetic shift left on r
-				printf("ARITHEMTIC SHIFT LEFT\n");
+				if (r == '0')
+				{
+					arithmeticShift('L', accumulator, statusRegister);
+				}
+				else
+				{
+					arithmeticShift('L', indexRegister, statusRegister);
+				}
 			}
 			else if (secondNibble[0] == '1' &&
 					 secondNibble[1] == '1' &&
 					 secondNibble[2] == '0')
 			{
 				// Perform Arithmetic Shift Right on r
-				printf("ARITHEMTIC SHIFT RIGHT\n");
+				if (r == '0')
+				{
+					arithmeticShift('R', accumulator, statusRegister);
+				}
+				else
+				{
+					arithmeticShift('R', indexRegister, statusRegister);
+				}
 			}
 		}
 		else
@@ -145,7 +150,6 @@ int main(char argc, char** argv)
 
 			// Get Register
 			r = secondNibble[0];
-			printf("register: %c\n", r);
 
 			// Get addressing mode
 			int i;
@@ -156,18 +160,7 @@ int main(char argc, char** argv)
 			aaa[3] = '\0';
 
 			// Get word following instruction specifier
-			strncpy(word, &instructionRegister[10], 18);
-			word[18] = '\0';
-
-			// Remove newline characters
-			int j;
-			for (i = 0, j = 0; i < 16; i++, j++)
-			{
-				if (word[j] == '1' || word[j] == '0')
-				{
-					address[i] = word[j];
-				}
-			}
+			strncpy(address, &instructionRegister[8], 16);
 			address[16] = '\0';
 
 			// Decode instruction
@@ -182,21 +175,11 @@ int main(char argc, char** argv)
 					// Add to r
 					if (r == '0')
 					{
-						//add(memory, accumulator, address, statusRegister);
-						char addend[16];
-						strncpy(addend, &memory[toDec(address)], 16);
-
-						addBinaryNumbers(accumulator, addend,
-										 accumulator, statusRegister);
-
+						add(memory, accumulator, address, statusRegister);
 					}
 					else
 					{
-						char addend[16];
-						strncpy(addend, &memory[toDec(address)], 16);
-						addBinaryNumbers(indexRegister, addend,
-										 indexRegister, statusRegister);
-						//add(memory, indexRegister, address, statusRegister);
+						add(memory, indexRegister, address, statusRegister);
 					}
 					
 				}
@@ -207,27 +190,7 @@ int main(char argc, char** argv)
 					// Subtract from r
 					if (r == '0')
 					{
-						//subtract(memory, accumulator, address, statusRegister);
-						char minuend[16];
-						int i;
-						strncpy(minuend, &memory[toDec(address)], 16);
-						// convert to two's compliment
-						printf("minuend: %s\n", minuend);
-						for (i= 0; i < 16; i++)
-						{
-							if (minuend[i] == '0')
-							{
-								minuend[i] = '1';
-							}
-							else if (minuend[i] == '1')
-							{
-								minuend[i] = '0';
-							}
-						}
-						incrementBinary(minuend, 1);
-						printf("two's comp: %s\n", minuend);
-						addBinaryNumbers(accumulator, minuend,
-										 accumulator, statusRegister);
+						subtract(memory, accumulator, address, statusRegister);
 					}
 					else
 					{
@@ -268,22 +231,40 @@ int main(char argc, char** argv)
 				}
 			}
 
-
 			// Increment Program Counter by 2
 			incrementBinary(programCounter, 2);
 		}
 
+		// Print current status
+		printf("\n");
 		printf("Instruction Number %d\n", loop);
 		printf("Status (NZVC):  %s\n", statusRegister);
 		printf("Program Counter: %s\n", programCounter);
 		printf("Instruction: %s\n", instructionRegister);
 		printf("Accumulator: %s\n", accumulator);
-		printf("Index: %s\n", indexRegister);
+		printf("Index: %.16s\n", indexRegister);
 		printf("Stack Pointer: %s\n", stackPointer);
 		printf("----------------------------------\n");
 		loop++;
 	}
 	while(strcmp(instructionSpecifier, "00000000") != 0);
+	
+	// Print memory dump
+	printf("\n");
+	int newline = 0;
+	for (i = 0; i < memorySize; i++)
+	{
+		printf("%c", memory[i]);
+
+		newline++;
+
+		if (newline == 8)
+		{
+			printf("\n");
+			newline = 0;
+		}
+	}
+	printf("\n");
 
 	free(memory);
 
@@ -292,7 +273,7 @@ int main(char argc, char** argv)
 
 int incrementBinary(char* binary, int n)
 {
-	char temp[4];
+	char temp[5];
 	if (n == 1)
 	{
 		addBinaryNumbers(binary, "0000000000000001", binary, temp);
@@ -307,21 +288,27 @@ int incrementBinary(char* binary, int n)
 
 int add(char* memory, char* reg, char* address, char* statusRegister)
 {
-	char addend[16];
-	strncpy(addend, &memory[toDec(address)], 16);
+	char addend[17];
+	memset(addend, '\0', sizeof(addend));
+	strncpy(addend, &memory[getLocation(address)], 16);
+	addend[16] = '\0';
 
 	addBinaryNumbers(reg, addend, reg, statusRegister);
+
+	reg[16] = '\0';
 
 	return 0;
 } // end add
 
 int subtract(char* memory, char* reg, char* address, char* statusRegister)
 {
-	char minuend[16];
+	char minuend[17];
 	int i;
-	strncpy(minuend, &memory[toDec(address)], 16);
+	memset(minuend, '\0', sizeof(minuend));
+	strncpy(minuend, &memory[getLocation(address)], 16);
+	minuend[16] = '\0';
+
 	// convert to two's compliment
-	printf("minuend: %s\n", minuend);
 	for (i= 0; i < 16; i++)
 	{
 		if (minuend[i] == '0')
@@ -334,40 +321,123 @@ int subtract(char* memory, char* reg, char* address, char* statusRegister)
 		}
 	}
 	incrementBinary(minuend, 1);
-	printf("two's comp: %s\n", minuend);
 	addBinaryNumbers(reg, minuend, reg, statusRegister);
+
+	reg[16] = '\0';
 
 	return 0;
 } // end subtract
 
 int loadWord(char* memory, char* reg, char* address, char* statusRegister)
 {
-	char word[17];
+	strncpy(reg, &memory[getLocation(address)], 16);
+	reg[16] = '\0';
 
-	strncpy(word, &memory[toDec(address)], 16);
-	word[16] = '\0';
-	printf("load word: %s\n", word);
-
-	strncpy(reg, word, 16);
+	// Check negative flag
+	if (reg[0] == '1')
+	{
+		// Set negative flag
+		statusRegister[0] = '1';
+	}
+	else
+	{
+		statusRegister[0] = '0';
+	}
+	
+	// Check zero flag
+	int zero = 1;
+	int loop = 0;
+	for (loop = 0; loop < strlen(reg); loop++)
+	{
+		if (reg[loop] != '0')
+		{
+			zero = 0; // non-zero bit
+		}
+	}
+	if (zero == 1)
+	{
+		// Set zero flag
+		statusRegister[1] = '1';
+	}
+	else
+	{
+		statusRegister[1] = '0';
+	}
 
 	return 0;
 } // end loadWord
 
 int storeWord(char* memory, char* reg, char* address, char* statusRegister)
 {
-	char word[17];
-	strncpy(word, reg, 16);
-	word[16] = '\0';
-	printf("store word: %s\n", word);
-	strncpy(&memory[toDec(address)], word, 16);
+	strncpy(&memory[getLocation(address)], reg, 16);
+
+	// Check negative flag
+	if (reg[0] == '1')
+	{
+		// Set negative flag
+		statusRegister[0] = '1';
+	}
+	else
+	{
+		statusRegister[0] = '0';
+	}
+	
+	// Check zero flag
+	int zero = 1;
+	int loop = 0;
+	for (loop = 0; loop < strlen(reg); loop++)
+	{
+		if (reg[loop] != '0')
+		{
+			zero = 0; // non-zero bit
+		}
+	}
+	if (zero == 1)
+	{
+		// Set zero flag
+		statusRegister[1] = '1';
+	}
+	else
+	{
+		statusRegister[1] = '0';
+	}
 
 	return 0;
 } // end storeWord
 
+int arithmeticShift(char direction, char* reg, char* statusRegister)
+{
+	char temp[17];
+	int len = strlen(reg);
+	int i = 0;
+
+	memset(temp, '\0', sizeof(temp));
+	strncpy(temp, reg, 16);
+	temp[16] = '\0';
+	
+	if (direction == 'L')
+	{
+		for (i = 0; i < len - 1; i++)
+		{
+			reg[i] = temp[i+1];
+		}
+		reg[len - 1] = '0';
+	}
+	else if (direction == 'R')
+	{
+		char mostSig = reg[0];
+		for (i = len - 1; i > 0; i--)
+		{
+			reg[i] = temp[i-1];
+		}
+		reg[0] = mostSig;
+	}
+
+	return 0;
+} // end arithmeticShift
+
 int getSizeOfMemory(FILE *filePointer)
 {
-// function header
-//
 	char temp; //temporary char variable
 	int numOfBits = 0;
 
@@ -400,13 +470,14 @@ long long toBin(long long decimalNum)
 	return binary;
 } // end toBin
 
-int toDec(char* binaryNum)
+int getLocation(char* binaryNum)
 {
 	int lengthOfString = strlen(binaryNum) - 1;
 	int i, j = 0;
 	int bit = 0;
 	int bitValue = 0;
 	int decimalNum = 0;
+	int bitLocation = 0;
 
 	for (i = 0, j = lengthOfString; i < lengthOfString, j >= 0; i++, j--)
 	{
@@ -417,8 +488,10 @@ int toDec(char* binaryNum)
 		decimalNum += bitValue;
 	}
 
-	return decimalNum;
-} // end convertToDecimal
+	bitLocation = decimalNum * 8;
+
+	return bitLocation;
+} // end getLocation
 
 int power(int base, int exponent)
 {
@@ -437,16 +510,13 @@ int power(int base, int exponent)
 
 int addBinaryNumbers(char* num1, char* num2, char* result, char* statusRegister)
 {
-/*
- * Function Header
- *
- */
-	char *ptr1;
-	char *ptr2;
-
 	int length = strlen(num1);
-	long long binary1 = toBin(strtoll(num1, &ptr1, 2));
-	long long binary2 = toBin(strtoll(num2, &ptr2, 2));
+	long long binary1 = toBin(strtoll(num1, NULL, 2));
+	long long binary2 = toBin(strtoll(num2, NULL, 2));
+	char originalNum1[17];
+	
+	strncpy(originalNum1, num1, 16);
+	originalNum1[16] = '\0';
 
 	int i = 0;
 	int remainder = 0;
@@ -454,8 +524,8 @@ int addBinaryNumbers(char* num1, char* num2, char* result, char* statusRegister)
 
 	while (binary1 != 0 || binary2 != 0)
 	{
-		sum[i++] =(binary1 % 10 + binary2 % 10 + remainder) % 2;
-		remainder =(binary1 % 10 + binary2 % 10 + remainder) / 2;
+		sum[i++] = (binary1 % 10 + binary2 % 10 + remainder) % 2;
+		remainder = (binary1 % 10 + binary2 % 10 + remainder) / 2;
 		binary1 = binary1 / 10;
 		binary2 = binary2 / 10;
 	}
@@ -463,32 +533,41 @@ int addBinaryNumbers(char* num1, char* num2, char* result, char* statusRegister)
 	if (remainder != 0)
 	{
 		sum[i++] = remainder;
-
-		// Set carry bit
-		statusRegister[3] = '1';
 	}
 
 	--i;
 
+	int position = (length - 1) - i;
 
-	int emptyBits = (length - 1) - i;
-
+	// Copy sum into result
 	while (i >= 0)
 	{
 		result[(length - 1) - i] = sum[i] + '0';
 		--i;
 	}
 
-	while (emptyBits >= 0)
+	// Handle empty bits
+	while (position >= 0)
 	{
-		--emptyBits;
-		if (emptyBits >= 0)
+		--position;
+		if (position >= 0)
 		{
-			result[emptyBits] = '0';
+			result[position] = '0';
 		}
 	}
 
-	// Check zero flag
+	// Check Negative flag
+	if (result[0] == '1')
+	{
+		// Set negative flag
+		statusRegister[0] = '1';
+	}
+	else
+	{
+		statusRegister[0] = '0';
+	}
+	
+	// Check Zero flag
 	int zero = 1;
 	int loop = 0;
 	for (loop = 0; loop < strlen(result); loop++)
@@ -498,24 +577,27 @@ int addBinaryNumbers(char* num1, char* num2, char* result, char* statusRegister)
 			zero = 0; // non-zero bit
 		}
 	}
-
 	if (zero == 1)
 	{
 		// Set zero flag
 		statusRegister[1] = '1';
 	}
+	else
+	{
+		statusRegister[1] = '0';
+	}
 
-	// Check overflow
+	// Check Overflow
 	int overflow = 0;
 
-	if (num1[0] == '1' && num2[0] == '1')
+	if (originalNum1[0] == '1' && num2[0] == '1')
 	{
 		if (result[0] == '0')
 		{
 			overflow = 1;
 		}
 	}
-	else if (num1[0] == '0' && num2[0] == '0')
+	else if (originalNum1[0] == '0' && num2[0] == '0')
 	{
 		if (result[0] == '1')
 		{
@@ -528,16 +610,20 @@ int addBinaryNumbers(char* num1, char* num2, char* result, char* statusRegister)
 		// Set overflow flag
 		statusRegister[2] = '1';
 	}
-
-	// Check negative flag
-	if (result[0] == '1')
+	else
 	{
-		// Set negative flag
-		statusRegister[0] = '1';
+		statusRegister[2] = '0';
+	}
+	
+	// Check Carry
+	if (sum[strlen(result)] == 1)
+	{
+		// Set carry bit
+		statusRegister[3] = '1';
 	}
 	else
 	{
-		statusRegister[0] = '0';
+		statusRegister[3] = '0';
 	}
 
 	return 0;
