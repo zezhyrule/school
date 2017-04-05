@@ -110,3 +110,26 @@ Prove x + x * y = x
 = x * (1 + y)
 = x * 1
 = x
+
+*Consensus Theorem:*
+
+The third term in the expression is a consensus of the previous two.
+
+Prove xy + x'z + yz = xy + x'z
+
+= xy + x'z + 1*yz		- identity AND
+= xy + x'z + (x+x')(yz) - complement OR
+= xy + x'z + xyz + x'yz	- distribute AND over OR
+= xy + xyz + x'z + x'yz - commute
+= xy(1+z) + x'z(1+y)	- distribute AND
+= xy*1 + x'z*1			- zero theorem
+= xy + x'z				- identity AND
+
+Prove (x+y)(x'+z)(y+z) = (x+y)(x'+z)
+
+Duality principle says the above is proven implicitly.
+
+*De Morgan's Law:*
+
+The complement of x is x'. To prove some expression y is the complement of
+x, you must show x+y = 1 AND xy = 0.
