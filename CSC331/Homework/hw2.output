@@ -1,0 +1,16 @@
+Script started on Tue 19 Sep 2017 04:11:35 PM CDT
+]0;cs331109@cs:~/school/CSC331/Homework[cs331109@cs Homework]$ ./hw2.sh hw2.dat
+
+"Abcddcba" is a palindrome.
+"Arewenotdrawnonwardtonewera" is a palindrome.
+"Ispalindromeapalindrome" is not a palindrome.
+"AbcdBA" is not a palindrome.
+"alula" is a palindrome.
+"AtoyotasaToyota" is a palindrome.
+"Stephenfaustinstateuniversity" is not a palindrome.
+"J" is a palindrome.
+
+]0;cs331109@cs:~/school/CSC331/Homework[cs331109@cs Homework]$ exit
+exit
+
+Script done on Tue 19 Sep 2017 04:11:50 PM CDT

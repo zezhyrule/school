@@ -1,0 +1,14 @@
+For this program, the goal is to read in lines from a file and
+determine whether the string on each line is a palindrome or not,
+and then output the results to the screen. 
+
+I had previously created a program to see whether given strings
+were palindromes in my Data Structures class. For that one, I used
+stacks and recursion, as the homework specifications required. I
+thought about reimplementing that method again, but after a bit
+of working on that I realized it would be too complicated for
+this assignment.
+
+Although I attempted to use C-style strings at first, I ended up
+using C++ string objects. The member functions of the string class
+were far too useful to not take advantage of.
