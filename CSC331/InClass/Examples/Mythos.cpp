@@ -5,6 +5,13 @@ using std::string;
 using std::cout;
 using std::endl;
 
+Mythos::Mythos(string n, int s, bool h)
+{
+	name = n;
+	size = s;
+	hasScales = h;
+}
+
 void Mythos::printMythos()
 {
 	cout << name << " Size: " << size << " Has Scales: " << hasScales << endl;

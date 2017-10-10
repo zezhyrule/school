@@ -1,6 +1,7 @@
 class Mythos
 {
 	public:
+		Mythos(std::string, int, bool);
 		void printMythos();
 		void setName(std::string);
 		void setSize(int);
