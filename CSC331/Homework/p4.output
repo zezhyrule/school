@@ -1,0 +1,137 @@
+Script started on Wed 25 Oct 2017 11:18:02 PM CDT
+]0;cs331109@cs:~/school/CSC331/Homework[cs331109@cs Homework]$ ./p4 p4.dat
+
+Enter ISBN to search for book title. (? for more options)
+ > ?
+
+   Type [a]dd to create new entry, [p]rint to display contents
+   [d]elete to remove entry, and [e]xit to quit.
+
+Enter ISBN to search for book title. (? for more options)
+ > p
+
+------------------------------------
+        Dictionary Entries
+
+   ISBN: 184970340X
+  Title: Legion
+
+
+   ISBN: 1844166643
+  Title: Mechanicum
+
+
+   ISBN: 1849703388
+  Title: Fulgrim
+
+
+   ISBN: 1849702233
+  Title: Prospero Burns
+
+
+   ISBN: 1849703892
+  Title: Betrayer
+
+
+   ISBN: 1849702675
+  Title: Brotherhood of the Storm
+
+
+   ISBN: 1849703256
+  Title: Galaxy in Flames
+
+
+   ISBN: 1849700168
+  Title: Horus Rising
+
+
+   ISBN: 1849702217
+  Title: Thousand Sons
+
+
+   ISBN: 1849703396
+  Title: Descent of Angels
+
+------------------------------------
+
+Enter ISBN to search for book title. (? for more options)
+ > 1849703256
+
+Book found: Galaxy in Flames
+
+Enter ISBN to search for book title. (? for more options)
+ > 3092093022
+
+Entry not found.
+
+Enter ISBN to search for book title. (? for more options)
+ > d
+
+What is the ISBN of book to remove?
+> 1849703256
+If given book was in collection, it is no longer.
+
+Enter ISBN to search for book title. (? for more options)
+ > a
+
+What is the ISBN of book to add?
+> 1849540231
+What is the title of the book?
+> The Cyclops Eater
+Book added to collection.
+
+Enter ISBN to search for book title. (? for more options)
+ > p
+
+------------------------------------
+        Dictionary Entries
+
+   ISBN: 184970340X
+  Title: Legion
+
+
+   ISBN: 1844166643
+  Title: Mechanicum
+
+
+   ISBN: 1849703388
+  Title: Fulgrim
+
+
+   ISBN: 1849702233
+  Title: Prospero Burns
+
+
+   ISBN: 1849703892
+  Title: Betrayer
+
+
+   ISBN: 1849702675
+  Title: Brotherhood of the Storm
+
+
+   ISBN: 1849540231
+  Title: The Cyclops Eater
+
+
+   ISBN: 1849700168
+  Title: Horus Rising
+
+
+   ISBN: 1849702217
+  Title: Thousand Sons
+
+
+   ISBN: 1849703396
+  Title: Descent of Angels
+
+------------------------------------
+
+Enter ISBN to search for book title. (? for more options)
+ > exit
+
+Exiting...
+]0;cs331109@cs:~/school/CSC331/Homework[cs331109@cs Homework]$ exit
+exit
+
+Script done on Wed 25 Oct 2017 11:19:53 PM CDT

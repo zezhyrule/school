@@ -1,0 +1,15 @@
+Script started on Thu 02 Nov 2017 04:05:23 PM CDT
+]0;cs331109@cs:~/school/CSC331/Homework[cs331109@cs Homework]$ ./p5.sh
+
+Enter three values for the first vector: 1 5 8
+
+Now enter three values for the second vector: 3 5 2
+
+  Dot Product: 44
+
+Cross Product: (-30, -22, -10)
+
+]0;cs331109@cs:~/school/CSC331/Homework[cs331109@cs Homework]$ exit
+exit
+
+Script done on Thu 02 Nov 2017 04:05:44 PM CDT
